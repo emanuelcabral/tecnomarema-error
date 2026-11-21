@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portal Jumper // Tecnomarema</title>
+  <style>
+    :root {
+      --bg-cosmos: #05030d;
+      --bg-panel: #0b071a;
+      --bg-card: #130c2b;
+      --marema-mint: #12f693;
+      --marema-purple: #cf30ff;
+      --marema-mint-soft: rgba(18, 246, 147, 0.14);
+      --marema-purple-soft: rgba(207, 48, 255, 0.16);
+      --text-main: #f6f2ff;
+      --text-muted: #a699cc;
+      --danger: #ff3366;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      max-height: 100vh;
+      overflow: hidden;
+    }
+
+    body {
+      background:
+        radial-gradient(circle at 20% 15%, rgba(207, 48, 255, 0.18), transparent 45%),
+        radial-gradient(circle at 85% 80%, rgba(18, 246, 147, 0.14), transparent 45%),
+        var(--bg-cosmos);
+      color: var(--text-main);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      height: 100dvh;
+      max-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+    }
+
+    .game-shell {
+      position: relative;
+      width: 100%;
+      max-width: 680px;
+      height: 100%;
+      max-height: calc(100vh - 20px);
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-panel);
+      border: 1px solid rgba(207, 48, 255, 0.38);
+      border-radius: 12px;
+      box-shadow:
+        0 18px 45px rgba(0, 0, 0, 0.72),
+        0 0 26px rgba(207, 48, 255, 0.16),
+        0 0 18px rgba(18, 246, 147, 0.08);
+      overflow: hidden;
+    }
+
+    .top-hud {
+      flex-shrink: 0;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--bg-card);
+      border-bottom: 1px solid rgba(207, 48, 255, 0.24);
+      font-size: 11px;
+    }
+
+    .brand-link {
+      color: var(--marema-mint);
+      text-decoration: none;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+    }
+
+    .brand-link:hover {
+      color: var(--marema-purple);
+    }
+
+    .brand-link span {
+      color: var(--marema-purple);
+    }
+
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .stats strong {
+      color: var(--marema-mint);
+    }
+
+    .player-bar {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 12px;
+      background: #080514;
+      border-bottom: 1px solid rgba(18, 246, 147, 0.14);
+      font-size: 11px;
+    }
+
+    .player-input-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .player-input-group label {
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .player-input {
+      background: var(--bg-card);
+      border: 1px solid rgba(207, 48, 255, 0.42);
+      border-radius: 5px;
+      color: var(--marema-mint);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 7px;
+      width: 100%;
+      max-width: 135px;
+      outline: none;
+    }
+
+    .player-input:focus {
+      border-color: var(--marema-mint);
+    }
+
+    .hi-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .hi-badge {
+      color: var(--marema-purple);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .hi-badge strong {
+      color: var(--marema-mint);
+    }
+
+    .top10-btn {
+      background: var(--marema-purple-soft);
+      border: 1px solid rgba(207, 48, 255, 0.55);
+      color: var(--marema-mint);
+      border-radius: 5px;
+      padding: 3px 8px;
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .top10-btn:hover {
+      background: rgba(18, 246, 147, 0.18);
+      border-color: var(--marema-mint);
+    }
+
+    .level-bar-wrap {
+      flex-shrink: 0;
+      height: 4px;
+      background: #05030d;
+      width: 100%;
+    }
+
+    .level-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--marema-purple), var(--marema-mint));
+      transition: width 0.2s ease;
+    }
+
+    .canvas-stage {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      background: var(--bg-cosmos);
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: pointer;
+    }
+
+    /* Modal Top 10 Highscores */
+    .leaderboard-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(5, 3, 13, 0.88);
+      backdrop-filter: blur(3px);
+      z-index: 20;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .leaderboard-overlay.open {
+      display: flex;
+    }
+
+    .leaderboard-card {
+      width: 100%;
+      max-width: 410px;
+      background: #0e0921;
+      border: 1px solid rgba(207, 48, 255, 0.55);
+      border-radius: 10px;
+      box-shadow: 0 0 28px rgba(207, 48, 255, 0.25);
+      padding: 14px 16px;
+    }
+
+    .leaderboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(18, 246, 147, 0.22);
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+    }
+
+    .leaderboard-header h3 {
+      color: var(--marema-mint);
+      font-size: 13px;
+      letter-spacing: 0.6px;
+    }
+
+    .close-lb-btn {
+      background: transparent;
+      border: 1px solid rgba(207, 48, 255, 0.5);
+      color: var(--marema-purple);
+      border-radius: 4px;
+      padding: 2px 7px;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .close-lb-btn:hover {
+      border-color: var(--marema-mint);
+      color: var(--marema-mint);
+    }
+
+    .lb-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+
+    .lb-table th {
+      text-align: left;
+      color: var(--marema-purple);
+      padding: 4px 6px;
+      border-bottom: 1px solid rgba(207, 48, 255, 0.2);
+      font-weight: 700;
+    }
+
+    .lb-table td {
+      padding: 5px 6px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+    }
+
+    .lb-table tr:first-child td {
+      color: var(--marema-mint);
+      font-weight: 700;
+    }
+
+    .lb-table td.pts-col,
+    .lb-table th.pts-col {
+      text-align: right;
+    }
+
+    .lb-empty {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 18px 8px;
+      font-size: 11px;
+    }
+
+    .reward-panel {
+      display: none;
+      flex-shrink: 0;
+      padding: 9px 14px;
+      background: #100926;
+      border-top: 1px solid rgba(18, 246, 147, 0.4);
+      text-align: center;
+    }
+
+    .reward-panel.visible {
+      display: block;
+    }
+
+    .reward-panel h2 {
+      color: var(--marema-mint);
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .coupon-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--marema-mint-soft);
+      border: 1px dashed var(--marema-mint);
+      padding: 4px 10px;
+      border-radius: 6px;
+      margin-top: 3px;
+    }
+
+    .coupon-code {
+      color: var(--marema-mint);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .copy-btn {
+      background: var(--marema-mint);
+      color: #05030d;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 9px;
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .footer-bar {
+      flex-shrink: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      background: #070412;
+      border-top: 1px solid rgba(207, 48, 255, 0.16);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .keycap {
+      display: inline-block;
+      padding: 1px 5px;
+      border-radius: 4px;
+      border: 1px solid rgba(18, 246, 147, 0.45);
+      background: rgba(18, 246, 147, 0.12);
+      color: var(--marema-mint);
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-shell">
+    <div class="top-hud">
+      <a class="brand-link" href="https://tecnomarema.com.ar/" target="_blank" rel="noopener noreferrer">
+        TECNOMAREMA<span>.COM.AR</span>
+      </a>
+      <div class="stats">
+        <div>LVL: <strong id="lvlHud">1/20</strong></div>
+        <div>NÚCLEOS: <strong id="coresHud">0/0</strong></div>
+        <div>PTS: <strong id="scoreHud">00000</strong></div>
+        <div>VIDAS: <strong id="livesHud">3</strong></div>
+      </div>
+    </div>
+
+    <div class="player-bar">
+      <div class="player-input-group">
+        <label for="playerNameInput">JUGADOR:</label>
+        <input
+          id="playerNameInput"
+          class="player-input"
+          type="text"
+          maxlength="14"
+          placeholder="Tu nombre"
+          autocomplete="off"
+        />
+      </div>
+      <div class="hi-controls">
+        <div class="hi-badge" id="hiHud">HI: <strong>00000</strong> (---)</div>
+        <button id="openTop10Btn" class="top10-btn" type="button">★ TOP 10</button>
+      </div>
+    </div>
+
+    <div class="level-bar-wrap">
+      <div class="level-bar-fill" id="levelBar"></div>
+    </div>
+
+    <div class="canvas-stage">
+      <canvas id="gameCanvas" width="680" height="480"></canvas>
+
+      <!-- Modal Ranking Top 10 -->
+      <div class="leaderboard-overlay" id="leaderboardOverlay">
+        <div class="leaderboard-card">
+          <div class="leaderboard-header">
+            <h3>★ TOP 10 HIGHSCORES // MAREMA</h3>
+            <button id="closeTop10Btn" class="close-lb-btn" type="button">CERRAR [ESC]</button>
+          </div>
+          <div id="leaderboardBody"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="reward-panel" id="rewardPanel">
+      <h2>¡20/20 SECTORES SUPERADOS! TU 50% OFF ESTÁ LISTO</h2>
+      <div class="coupon-row">
+        <span class="coupon-code" id="promoCodeText">MAREMA50-PORTAL</span>
+        <button class="copy-btn" id="copyCodeBtn" type="button">COPIAR</button>
+      </div>
+    </div>
+
+    <div class="footer-bar">
+      <div>
+        <span class="keycap">←</span> <span class="keycap">→</span> Mover &nbsp;
+        <span class="keycap">↑</span> Saltar
+      </div>
+      <div id="statusHud">INICIO</div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const lvlHud = document.getElementById("lvlHud");
+    const coresHud = document.getElementById("coresHud");
+    const scoreHud = document.getElementById("scoreHud");
+    const livesHud = document.getElementById("livesHud");
+    const levelBar = document.getElementById("levelBar");
+    const statusHud = document.getElementById("statusHud");
+    const rewardPanel = document.getElementById("rewardPanel");
+    const promoCodeText = document.getElementById("promoCodeText");
+    const copyCodeBtn = document.getElementById("copyCodeBtn");
+    const playerNameInput = document.getElementById("playerNameInput");
+    const hiHud = document.getElementById("hiHud");
+
+    const openTop10Btn = document.getElementById("openTop10Btn");
+    const closeTop10Btn = document.getElementById("closeTop10Btn");
+    const leaderboardOverlay = document.getElementById("leaderboardOverlay");
+    const leaderboardBody = document.getElementById("leaderboardBody");
+
+    const PROMO_CODE = "MAREMA50-PORTAL";
+    const CUSTOM_LOGO_URL = "";
+    const STORAGE_KEY_TOP10 = "tecnomarema_portal_top10_v1";
+    const STORAGE_KEY_NAME = "tecnomarema_portal_player_v1";
+
+    const MAX_LEVEL = 20;
+    const W = canvas.width;
+    const H = canvas.height;
+
+    const MINT = "#12f693";
+    const PURPLE = "#cf30ff";
+    const DANGER = "#ff3366";
+
+    promoCodeText.textContent = PROMO_CODE;
+
+    let customLogoImg = null;
+    let customLogoLoaded = false;
+    if (CUSTOM_LOGO_URL) {
+      customLogoImg = new Image();
+      customLogoImg.onload = () => {
+        customLogoLoaded = true;
+      };
+      customLogoImg.src = CUSTOM_LOGO_URL;
+    }
+
+    let playerName = (localStorage.getItem(STORAGE_KEY_NAME) || "PILOTO").trim().toUpperCase() || "PILOTO";
+    playerNameInput.value = playerName;
+
+    function loadTop10() {
+      try {
+        const list = JSON.parse(localStorage.getItem(STORAGE_KEY_TOP10));
+        if (Array.isArray(list)) {
+          return list
+            .filter((item) => item && typeof item.score === "number")
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 10);
+        }
+      } catch (_) {}
+      return [];
+    }
+
+    let top10List = loadTop10();
+
+    function saveRunToTop10(name, finalScore, reachedLevel) {
+      const cleanScore = Math.floor(finalScore);
+      if (cleanScore <= 0) return;
+
+      top10List.push({
+        name: name || "PILOTO",
+        score: cleanScore,
+        level: reachedLevel
+      });
+
+      top10List.sort((a, b) => b.score - a.score);
+      top10List = top10List.slice(0, 10);
+      localStorage.setItem(STORAGE_KEY_TOP10, JSON.stringify(top10List));
+      renderLeaderboard();
+    }
+
+    function renderLeaderboard() {
+      if (top10List.length === 0) {
+        leaderboardBody.innerHTML = `<div class="lb-empty">Todavía no hay puntajes registrados.<br>¡Jugá una partida para entrar al Top 10!</div>`;
+        return;
+      }
+
+      const rowsHtml = top10List
+        .map(
+          (entry, idx) => `
+          <tr>
+            <td>#${idx + 1}</td>
+            <td>${entry.name}</td>
+            <td>LVL ${entry.level}</td>
+            <td class="pts-col">${formatPts(entry.score)}</td>
+          </tr>
+        `
+        )
+        .join("");
+
+      leaderboardBody.innerHTML = `
+        <table class="lb-table">
+          <thead>
+            <tr>
+              <th>POS</th>
+              <th>JUGADOR</th>
+              <th>NIVEL</th>
+              <th class="pts-col">PUNTOS</th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      `;
+    }
+
+    const keys = { left: false, right: false, up: false };
+
+    // Estados: "START" | "PLAYING" | "LEVEL_UP" | "GAME_OVER" | "WIN"
+    let state = "START";
+    let level = 1;
+    let lives = 3;
+    let score = 0;
+    let platforms = [];
+    let portals = [];
+    let cores = [];
+    let spikes = [];
+    let particles = [];
+    let portalCooldown = 0;
+    let totalCoresInLevel = 0;
+    let collectedCoresInLevel = 0;
+
+    const player = {
+      x: 60,
+      y: H - 72,
+      w: 24,
+      h: 26,
+      vx: 0,
+      vy: 0,
+      moveSpeed: 4.2,
+      gravity: 0.48,
+      jumpVy: -10.6,
+      onGround: false
+    };
+
+    const stars = Array.from({ length: 80 }, (_, idx) => {
+      const tintRoll = idx % 7;
+      let color = "#f6f2ff";
+      if (tintRoll === 0 || tintRoll === 1) color = MINT;
+      else if (tintRoll === 2 || tintRoll === 3) color = PURPLE;
+
+      return {
+        x: Math.random() * W,
+        y: Math.random() * H,
+        size: 1 + (idx % 3) * 0.65,
+        twinkle: Math.random() * Math.PI * 2,
+        speed: 0.03 + (idx % 3) * 0.015,
+        color
+      };
+    });
+
+    function drawRoundedBox(x, y, w, h, r) {
+      const radius = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.arcTo(x + w, y, x + w, y + h, radius);
+      ctx.arcTo(x + w, y + h, x, y + h, radius);
+      ctx.arcTo(x, y + h, x, y, radius);
+      ctx.arcTo(x, y, x + w, y, radius);
+      ctx.closePath();
+    }
+
+    function formatPts(val) {
+      return String(Math.floor(val)).padStart(5, "0");
+    }
+
+    function syncHighScore() {
+      const bestSaved = top10List.length > 0 ? top10List[0] : { score: 0, name: "---" };
+      if (score > bestSaved.score) {
+        hiHud.innerHTML = `HI: <strong>${formatPts(score)}</strong> (${playerName})`;
+      } else {
+        hiHud.innerHTML = `HI: <strong>${formatPts(bestSaved.score)}</strong> (${bestSaved.name})`;
+      }
+    }
+
+    function spawnBurst(x, y, color, count = 12) {
+      for (let i = 0; i < count; i++) {
+        const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.4;
+        const spd = 1.4 + Math.random() * 3.4;
+        particles.push({
+          x,
+          y,
+          vx: Math.cos(angle) * spd,
+          vy: Math.sin(angle) * spd,
+          size: 2.5 + Math.random() * 2.5,
+          life: 20 + Math.random() * 10,
+          color
+        });
+      }
+    }
+
+    function initLevel(targetLvl) {
+      level = targetLvl;
+      particles = [];
+      portalCooldown = 0;
+
+      player.x = 56;
+      player.y = H - 72;
+      player.vx = 0;
+      player.vy = 0;
+      player.onGround = false;
+
+      const movingSpeed = Math.min(2.6, 0.9 + (level - 1) * 0.1);
+      const variant = level % 3;
+
+      // Base inferior + plataformas escalonadas
+      platforms = [
+        { x: 16, y: H - 34, w: W - 32, h: 14, type: "solid", vx: 0 },
+        { x: 40, y: 365, w: 150, h: 12, type: "solid", vx: 0 },
+        { x: 250, y: 315, w: 155, h: 12, type: variant === 0 ? "moving" : "solid", vx: variant === 0 ? movingSpeed : 0 },
+        { x: 465, y: 265, w: 165, h: 12, type: "solid", vx: 0 },
+        { x: 260, y: 195, w: 160, h: 12, type: variant === 1 ? "moving" : "solid", vx: variant === 1 ? -movingSpeed : 0 },
+        { x: 55, y: 135, w: 165, h: 12, type: "solid", vx: 0 },
+        { x: 455, y: 120, w: 175, h: 12, type: variant === 2 ? "moving" : "solid", vx: variant === 2 ? movingSpeed : 0 }
+      ];
+
+      // Portales emparejados (A <-> B)
+      portals = [
+        { id: "A", x: 535, y: 235, r: 16, targetX: 95, targetY: 102, color: PURPLE },
+        { id: "B", x: 95, y: 102, r: 16, targetX: 535, targetY: 235, color: MINT }
+      ];
+
+      // Núcleos de energía a recolectar
+      const coreCount = Math.min(8, 4 + Math.floor((level - 1) / 3));
+      const coreSpots = [
+        { x: 115, y: 338 },
+        { x: 325, y: 288 },
+        { x: 545, y: 238 },
+        { x: 340, y: 168 },
+        { x: 135, y: 108 },
+        { x: 540, y: 93 },
+        { x: 220, y: 418 },
+        { x: 440, y: 418 }
+      ];
+
+      cores = coreSpots.slice(0, coreCount).map((s) => ({
+        x: s.x,
+        y: s.y,
+        r: 7,
+        collected: false,
+        pulse: Math.random() * Math.PI * 2
+      }));
+
+      totalCoresInLevel = cores.length;
+      collectedCoresInLevel = 0;
+
+      // Peligros (pinchos/láser en piso o plataformas)
+      const hazardCount = Math.min(4, 1 + Math.floor(level / 5));
+      const hazardSpots = [
+        { x: 310, y: H - 46, w: 36, h: 12 },
+        { x: 170, y: H - 46, w: 34, h: 12 },
+        { x: 470, y: H - 46, w: 36, h: 12 },
+        { x: 295, y: 183, w: 32, h: 12 }
+      ];
+      spikes = hazardSpots.slice(0, hazardCount);
+
+      state = "PLAYING";
+      statusHud.textContent = `SECTOR ${level}`;
+      updateHUD();
+    }
+
+    function startNewGame() {
+      playerName = (playerNameInput.value || "PILOTO").trim().toUpperCase() || "PILOTO";
+      playerNameInput.value = playerName;
+      localStorage.setItem(STORAGE_KEY_NAME, playerName);
+
+      lives = 3;
+      score = 0;
+      rewardPanel.classList.remove("visible");
+      syncHighScore();
+      initLevel(1);
+    }
+
+    function updateHUD() {
+      lvlHud.textContent = `${level}/${MAX_LEVEL}`;
+      coresHud.textContent = `${collectedCoresInLevel}/${totalCoresInLevel}`;
+      scoreHud.textContent = formatPts(score);
+      livesHud.textContent = lives;
+
+      const corePct = totalCoresInLevel > 0 ? collectedCoresInLevel / totalCoresInLevel : 0;
+      const totalPct = (((level - 1) + (state === "WIN" ? 1 : corePct)) / MAX_LEVEL) * 100;
+      levelBar.style.width = `${Math.min(100, totalPct)}%`;
+      syncHighScore();
+    }
+
+    function damagePlayer() {
+      lives--;
+      spawnBurst(player.x + player.w / 2, player.y + player.h / 2, DANGER, 18);
+
+      if (lives <= 0) {
+        lives = 0;
+        state = "GAME_OVER";
+        statusHud.textContent = "GAME OVER";
+        saveRunToTop10(playerName, score, level);
+        updateHUD();
+        return;
+      }
+
+      player.x = 56;
+      player.y = H - 72;
+      player.vx = 0;
+      player.vy = 0;
+      portalCooldown = 25;
+      updateHUD();
+    }
+
+    function update() {
+      for (const st of stars) {
+        st.twinkle += st.speed;
+      }
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life--;
+        if (p.life <= 0) particles.splice(i, 1);
+      }
+
+      if (state !== "PLAYING" || leaderboardOverlay.classList.contains("open")) return;
+
+      if (portalCooldown > 0) portalCooldown--;
+
+      // Mover plataformas móviles
+      for (const plat of platforms) {
+        if (plat.type === "moving") {
+          plat.x += plat.vx;
+          if (plat.x <= 24 || plat.x + plat.w >= W - 24) {
+            plat.vx *= -1;
+          }
+        }
+      }
+
+      // Movimiento horizontal
+      if (keys.left && !keys.right) {
+        player.vx = -player.moveSpeed;
+      } else if (keys.right && !keys.left) {
+        player.vx = player.moveSpeed;
+      } else {
+        player.vx *= 0.75;
+      }
+
+      player.x = Math.max(12, Math.min(W - player.w - 12, player.x + player.vx));
+
+      // Salto
+      if (keys.up && player.onGround) {
+        player.vy = player.jumpVy;
+        player.onGround = false;
+        spawnBurst(player.x + player.w / 2, player.y + player.h, MINT, 6);
+      }
+
+      const prevBottom = player.y + player.h;
+      player.vy = Math.min(13, player.vy + player.gravity);
+      player.y += player.vy;
+      player.onGround = false;
+
+      // Colisión superior con plataformas al caer
+      if (player.vy >= 0) {
+        for (const plat of platforms) {
+          const withinX = player.x + player.w - 4 > plat.x && player.x + 4 < plat.x + plat.w;
+          const crossedTop = prevBottom <= plat.y + 6 && player.y + player.h >= plat.y;
+          if (withinX && crossedTop) {
+            player.y = plat.y - player.h;
+            player.vy = 0;
+            player.onGround = true;
+            if (plat.type === "moving") {
+              player.x = Math.max(12, Math.min(W - player.w - 12, player.x + plat.vx));
+            }
+            break;
+          }
+        }
+      }
+
+      // Caída al vacío inferior
+      if (player.y > H + 20) {
+        damagePlayer();
+        return;
+      }
+
+      // Colisión con peligros
+      for (const sp of spikes) {
+        const hit =
+          player.x + player.w - 4 > sp.x &&
+          player.x + 4 < sp.x + sp.w &&
+          player.y + player.h - 2 > sp.y &&
+          player.y + 4 < sp.y + sp.h;
+        if (hit) {
+          damagePlayer();
+          return;
+        }
+      }
+
+      // Teletransporte entre portales
+      if (portalCooldown === 0) {
+        const pCenterX = player.x + player.w / 2;
+        const pCenterY = player.y + player.h / 2;
+
+        for (const pt of portals) {
+          if (Math.hypot(pCenterX - pt.x, pCenterY - pt.y) < pt.r + 10) {
+            spawnBurst(pt.x, pt.y, pt.color, 12);
+            player.x = pt.targetX - player.w / 2;
+            player.y = pt.targetY - player.h / 2;
+            player.vy = -2.5;
+            portalCooldown = 35;
+            score += 30 * level;
+            spawnBurst(pt.targetX, pt.targetY, MINT, 12);
+            break;
+          }
+        }
+      }
+
+      // Recolección de núcleos
+      const pCenterX = player.x + player.w / 2;
+      const pCenterY = player.y + player.h / 2;
+
+      for (const core of cores) {
+        if (core.collected) continue;
+        core.pulse += 0.08;
+        if (Math.hypot(pCenterX - core.x, pCenterY - core.y) < core.r + 14) {
+          core.collected = true;
+          collectedCoresInLevel++;
+          score += 50 * level;
+          spawnBurst(core.x, core.y, MINT, 10);
+        }
+      }
+
+      // Completar sector
+      if (collectedCoresInLevel >= totalCoresInLevel && totalCoresInLevel > 0) {
+        score += 200 * level;
+        updateHUD();
+
+        if (level >= MAX_LEVEL) {
+          state = "WIN";
+          statusHud.textContent = "20/20 COMPLETADO";
+          saveRunToTop10(playerName, score, MAX_LEVEL);
+          updateHUD();
+          rewardPanel.classList.add("visible");
+        } else {
+          state = "LEVEL_UP";
+          statusHud.textContent = `SECTOR ${level} SUPERADO`;
+        }
+        return;
+      }
+
+      updateHUD();
+    }
+
+    function drawCosmos() {
+      ctx.fillStyle = "#05030d";
+      ctx.fillRect(0, 0, W, H);
+
+      const g1 = ctx.createRadialGradient(W * 0.22, H * 0.25, 10, W * 0.22, H * 0.25, 220);
+      g1.addColorStop(0, "rgba(207, 48, 255, 0.12)");
+      g1.addColorStop(1, "rgba(5, 3, 13, 0)");
+      ctx.fillStyle = g1;
+      ctx.fillRect(0, 0, W, H);
+
+      const g2 = ctx.createRadialGradient(W * 0.8, H * 0.75, 10, W * 0.8, H * 0.75, 220);
+      g2.addColorStop(0, "rgba(18, 246, 147, 0.09)");
+      g2.addColorStop(1, "rgba(5, 3, 13, 0)");
+      ctx.fillStyle = g2;
+      ctx.fillRect(0, 0, W, H);
+
+      for (const st of stars) {
+        const alpha = 0.35 + 0.65 * Math.sin(st.twinkle);
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = st.color;
+        ctx.beginPath();
+        ctx.arc(st.x, st.y, st.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    function drawPlatformsAndSpikes() {
+      for (const plat of platforms) {
+        ctx.save();
+        ctx.fillStyle = plat.type === "moving" ? PURPLE : "#221447";
+        ctx.strokeStyle = plat.type === "moving" ? MINT : PURPLE;
+        ctx.lineWidth = 1.5;
+        drawRoundedBox(plat.x, plat.y, plat.w, plat.h, 5);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      for (const sp of spikes) {
+        ctx.save();
+        ctx.fillStyle = DANGER;
+        ctx.shadowColor = DANGER;
+        ctx.shadowBlur = 10;
+        const count = 3;
+        const step = sp.w / count;
+        for (let i = 0; i < count; i++) {
+          const sx = sp.x + i * step;
+          ctx.beginPath();
+          ctx.moveTo(sx, sp.y + sp.h);
+          ctx.lineTo(sx + step / 2, sp.y);
+          ctx.lineTo(sx + step, sp.y + sp.h);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+    }
+
+    function drawPortalsAndCores() {
+      for (const pt of portals) {
+        ctx.save();
+        ctx.strokeStyle = pt.color;
+        ctx.shadowColor = pt.color;
+        ctx.shadowBlur = 14;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, pt.r, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.fillStyle = "rgba(207, 48, 255, 0.16)";
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = "#f6f2ff";
+        ctx.font = "bold 10px monospace";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(pt.id, pt.x, pt.y + 1);
+        ctx.restore();
+      }
+
+      for (const core of cores) {
+        if (core.collected) continue;
+        const r = core.r + Math.sin(core.pulse) * 1.3;
+        ctx.save();
+        ctx.fillStyle = MINT;
+        ctx.shadowColor = MINT;
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.arc(core.x, core.y, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    function drawPlayer() {
+      if (state === "START") return;
+
+      ctx.save();
+      ctx.fillStyle = MINT;
+      ctx.shadowColor = MINT;
+      ctx.shadowBlur = 12;
+      drawRoundedBox(player.x, player.y, player.w, player.h, 5);
+      ctx.fill();
+
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = PURPLE;
+      ctx.fillRect(player.x + 6, player.y + 7, 12, 5);
+      ctx.restore();
+    }
+
+    function drawParticles() {
+      for (const p of particles) {
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = Math.max(0, p.life / 30);
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function drawHexLogo(cx, cy, radius) {
+      ctx.save();
+      ctx.translate(cx, cy);
+
+      if (customLogoLoaded && customLogoImg) {
+        const size = radius * 2.1;
+        ctx.drawImage(customLogoImg, -size / 2, -size / 2, size, size);
+        ctx.restore();
+        return;
+      }
+
+      ctx.shadowColor = MINT;
+      ctx.shadowBlur = 16;
+      ctx.fillStyle = MINT;
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i - Math.PI / 6;
+        const px = Math.cos(angle) * radius;
+        const py = Math.sin(angle) * radius;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = "#080514";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = "#06040f";
+      ctx.font = `900 ${Math.round(radius * 0.72)}px ui-monospace, monospace`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("TM", 0, 2);
+      ctx.restore();
+    }
+
+    function drawStartScreen() {
+      const boxX = 32;
+      const boxY = 18;
+      const boxW = W - 64;
+      const boxH = H - 36;
+
+      ctx.save();
+      ctx.fillStyle = "rgba(8, 5, 20, 0.92)";
+      ctx.strokeStyle = "rgba(207, 48, 255, 0.55)";
+      ctx.lineWidth = 1.5;
+      drawRoundedBox(boxX, boxY, boxW, boxH, 12);
+      ctx.fill();
+      ctx.stroke();
+
+      drawHexLogo(W / 2, boxY + 46, 28);
+
+      ctx.textAlign = "center";
+      ctx.fillStyle = MINT;
+      ctx.font = "bold 18px monospace";
+      ctx.fillText("PORTAL JUMPER // SALTO CÓSMICO", W / 2, boxY + 92);
+
+      ctx.fillStyle = PURPLE;
+      ctx.font = "bold 11px monospace";
+      ctx.fillText("SUPERÁ LOS 20 SECTORES Y GANÁ 50% OFF", W / 2, boxY + 112);
+
+      const infoX = boxX + 24;
+      const infoY = boxY + 128;
+      const infoW = boxW - 48;
+      const infoH = 212;
+
+      ctx.fillStyle = "rgba(19, 12, 43, 0.94)";
+      ctx.strokeStyle = "rgba(18, 246, 147, 0.3)";
+      ctx.lineWidth = 1;
+      drawRoundedBox(infoX, infoY, infoW, infoH, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.textAlign = "left";
+      ctx.fillStyle = MINT;
+      ctx.font = "bold 12px monospace";
+      ctx.fillText("¿CÓMO FUNCIONA?", infoX + 16, infoY + 22);
+
+      ctx.fillStyle = "#f6f2ff";
+      ctx.font = "11px monospace";
+      ctx.fillText("• Movete con [←] [→] y saltá entre plataformas con [↑].", infoX + 16, infoY + 46);
+      ctx.fillText("• Entrá a los portales [A] / [B] para teletransportarte.", infoX + 16, infoY + 68);
+      ctx.fillText("• Recolectá todos los núcleos verde neón para avanzar.", infoX + 16, infoY + 90);
+
+      ctx.fillStyle = DANGER;
+      ctx.font = "bold 11px monospace";
+      ctx.fillText("• ¡CUIDADO! Esquivá los pinchos rojos y no caigas al vacío.", infoX + 16, infoY + 116);
+
+      ctx.fillStyle = PURPLE;
+      ctx.font = "bold 11px monospace";
+      ctx.fillText("DESAFÍO:", infoX + 16, infoY + 144);
+
+      ctx.fillStyle = "#f6f2ff";
+      ctx.font = "11px monospace";
+      ctx.fillText("• 20 sectores con más núcleos, plataformas móviles y peligros.", infoX + 16, infoY + 166);
+      ctx.fillText("• Tenés 3 vidas y tu puntaje compite en el Top 10 Highscores.", infoX + 16, infoY + 188);
+
+      const pulse = 0.75 + 0.25 * Math.sin(Date.now() * 0.007);
+      ctx.textAlign = "center";
+      ctx.globalAlpha = pulse;
+      ctx.fillStyle = MINT;
+      ctx.font = "bold 13px monospace";
+      ctx.fillText("PRESIONÁ [↑] O HACÉ CLIC AQUÍ PARA INICIAR", W / 2, boxY + boxH - 18);
+      ctx.restore();
+    }
+
+    function drawOverlay() {
+      if (state === "PLAYING") return;
+
+      if (state === "START") {
+        drawStartScreen();
+        return;
+      }
+
+      ctx.save();
+      ctx.fillStyle = "rgba(5, 3, 13, 0.84)";
+      ctx.fillRect(0, 0, W, H);
+      ctx.textAlign = "center";
+
+      if (state === "LEVEL_UP") {
+        ctx.fillStyle = MINT;
+        ctx.font = "bold 22px monospace";
+        ctx.fillText(`SECTOR ${level} SUPERADO`, W / 2, H / 2 - 18);
+
+        ctx.fillStyle = PURPLE;
+        ctx.font = "13px monospace";
+        ctx.fillText(`Presioná [↑] o hacé clic para el Sector ${level + 1}`, W / 2, H / 2 + 16);
+      } else if (state === "GAME_OVER") {
+        ctx.fillStyle = DANGER;
+        ctx.font = "bold 22px monospace";
+        ctx.fillText(`FALLASTE EN SECTOR ${level}`, W / 2, H / 2 - 22);
+
+        ctx.fillStyle = MINT;
+        ctx.font = "13px monospace";
+        ctx.fillText(`${playerName}: ${formatPts(score)} PTS`, W / 2, H / 2 + 6);
+
+        ctx.fillStyle = PURPLE;
+        ctx.font = "12px monospace";
+        ctx.fillText("Presioná [↑] o hacé clic para reintentar", W / 2, H / 2 + 34);
+      } else if (state === "WIN") {
+        drawHexLogo(W / 2, H / 2 - 64, 28);
+
+        ctx.fillStyle = MINT;
+        ctx.font = "bold 20px monospace";
+        ctx.fillText("¡20 / 20 SECTORES SUPERADOS!", W / 2, H / 2 - 12);
+
+        ctx.fillStyle = PURPLE;
+        ctx.font = "13px monospace";
+        ctx.fillText(`Puntaje: ${formatPts(score)} — Cupón 50% OFF abajo`, W / 2, H / 2 + 18);
+      }
+
+      ctx.restore();
+    }
+
+    function loop() {
+      update();
+      drawCosmos();
+      drawPlatformsAndSpikes();
+      drawPortalsAndCores();
+      drawParticles();
+      drawPlayer();
+      drawOverlay();
+      requestAnimationFrame(loop);
+    }
+
+    openTop10Btn.addEventListener("click", () => {
+      renderLeaderboard();
+      leaderboardOverlay.classList.add("open");
+    });
+
+    closeTop10Btn.addEventListener("click", () => {
+      leaderboardOverlay.classList.remove("open");
+    });
+
+    leaderboardOverlay.addEventListener("click", (e) => {
+      if (e.target === leaderboardOverlay) {
+        leaderboardOverlay.classList.remove("open");
+      }
+    });
+
+    playerNameInput.addEventListener("input", () => {
+      playerName = (playerNameInput.value || "PILOTO").trim().toUpperCase() || "PILOTO";
+      localStorage.setItem(STORAGE_KEY_NAME, playerName);
+    });
+
+    playerNameInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        playerNameInput.blur();
+      }
+      e.stopPropagation();
+    });
+
+    canvas.addEventListener("click", () => {
+      if (leaderboardOverlay.classList.contains("open")) return;
+      if (state === "START" || state === "GAME_OVER" || state === "WIN") {
+        startNewGame();
+      } else if (state === "LEVEL_UP") {
+        initLevel(level + 1);
+      }
+    });
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && leaderboardOverlay.classList.contains("open")) {
+        leaderboardOverlay.classList.remove("open");
+        return;
+      }
+
+      if (leaderboardOverlay.classList.contains("open")) return;
+
+      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.code)) {
+        e.preventDefault();
+      }
+
+      if (e.code === "ArrowUp") {
+        keys.up = true;
+        if (state === "START" || state === "GAME_OVER" || state === "WIN") {
+          startNewGame();
+        } else if (state === "LEVEL_UP") {
+          initLevel(level + 1);
+        }
+      } else if (e.code === "ArrowLeft") {
+        keys.left = true;
+      } else if (e.code === "ArrowRight") {
+        keys.right = true;
+      }
+    });
+
+    window.addEventListener("keyup", (e) => {
+      if (e.code === "ArrowUp") keys.up = false;
+      else if (e.code === "ArrowLeft") keys.left = false;
+      else if (e.code === "ArrowRight") keys.right = false;
+    });
+
+    copyCodeBtn.addEventListener("click", () => {
+      navigator.clipboard?.writeText(PROMO_CODE);
+      copyCodeBtn.textContent = "¡COPIADO!";
+      setTimeout(() => {
+        copyCodeBtn.textContent = "COPIAR";
+      }, 1800);
+    });
+
+    renderLeaderboard();
+    updateHUD();
+    loop();
+  </script>
+</body>
+</html>

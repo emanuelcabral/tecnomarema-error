@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cyber Bomberman Express // Tecnomarema</title>
+  <style>
+    :root {
+      --bg-cosmos: #05030d;
+      --bg-panel: #0b071a;
+      --bg-card: #130c2b;
+      --marema-mint: #12f693;
+      --marema-purple: #cf30ff;
+      --marema-mint-soft: rgba(18, 246, 147, 0.14);
+      --marema-purple-soft: rgba(207, 48, 255, 0.16);
+      --text-main: #f6f2ff;
+      --text-muted: #a699cc;
+      --danger: #ff3366;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      max-height: 100vh;
+      overflow: hidden;
+    }
+
+    body {
+      background:
+        radial-gradient(circle at 20% 15%, rgba(207, 48, 255, 0.18), transparent 45%),
+        radial-gradient(circle at 85% 80%, rgba(18, 246, 147, 0.14), transparent 45%),
+        var(--bg-cosmos);
+      color: var(--text-main);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      height: 100dvh;
+      max-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+    }
+
+    .game-shell {
+      position: relative;
+      width: 100%;
+      max-width: 680px;
+      height: 100%;
+      max-height: calc(100vh - 20px);
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-panel);
+      border: 1px solid rgba(207, 48, 255, 0.38);
+      border-radius: 12px;
+      box-shadow:
+        0 18px 45px rgba(0, 0, 0, 0.72),
+        0 0 26px rgba(207, 48, 255, 0.16),
+        0 0 18px rgba(18, 246, 147, 0.08);
+      overflow: hidden;
+    }
+
+    .top-hud {
+      flex-shrink: 0;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--bg-card);
+      border-bottom: 1px solid rgba(207, 48, 255, 0.24);
+      font-size: 11px;
+    }
+
+    .brand-link {
+      color: var(--marema-mint);
+      text-decoration: none;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+    }
+
+    .brand-link:hover {
+      color: var(--marema-purple);
+    }
+
+    .brand-link span {
+      color: var(--marema-purple);
+    }
+
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .stats strong {
+      color: var(--marema-mint);
+    }
+
+    .player-bar {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 12px;
+      background: #080514;
+      border-bottom: 1px solid rgba(18, 246, 147, 0.14);
+      font-size: 11px;
+    }
+
+    .player-input-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .player-input-group label {
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .player-input {
+      background: var(--bg-card);
+      border: 1px solid rgba(207, 48, 255, 0.42);
+      border-radius: 5px;
+      color: var(--marema-mint);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 7px;
+      width: 100%;
+      max-width: 135px;
+      outline: none;
+    }
+
+    .player-input:focus {
+      border-color: var(--marema-mint);
+    }
+
+    .hi-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .hi-badge {
+      color: var(--marema-purple);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .hi-badge strong {
+      color: var(--marema-mint);
+    }
+
+    .top10-btn {
+      background: var(--marema-purple-soft);
+      border: 1px solid rgba(207, 48, 255, 0.55);
+      color: var(--marema-mint);
+      border-radius: 5px;
+      padding: 3px 8px;
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .top10-btn:hover {
+      background: rgba(18, 246, 147, 0.18);
+      border-color: var(--marema-mint);
+    }
+
+    .level-bar-wrap {
+      flex-shrink: 0;
+      height: 4px;
+      background: #05030d;
+      width: 100%;
+    }
+
+    .level-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--marema-purple), var(--marema-mint));
+      transition: width 0.2s ease;
+    }
+
+    .canvas-stage {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      background: var(--bg-cosmos);
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: pointer;
+    }
+
+    /* Modal Top 10 Highscores */
+    .leaderboard-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(5, 3, 13, 0.88);
+      backdrop-filter: blur(3px);
+      z-index: 20;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .leaderboard-overlay.open {
+      display: flex;
+    }
+
+    .leaderboard-card {
+      width: 100%;
+      max-width: 410px;
+      background: #0e0921;
+      border: 1px solid rgba(207, 48, 255, 0.55);
+      border-radius: 10px;
+      box-shadow: 0 0 28px rgba(207, 48, 255, 0.25);
+      padding: 14px 16px;
+    }
+
+    .leaderboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(18, 246, 147, 0.22);
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+    }
+
+    .leaderboard-header h3 {
+      color: var(--marema-mint);
+      font-size: 13px;
+      letter-spacing: 0.6px;
+    }
+
+    .close-lb-btn {
+      background: transparent;
+      border: 1px solid rgba(207, 48, 255, 0.5);
+      color: var(--marema-purple);
+      border-radius: 4px;
+      padding: 2px 7px;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .close-lb-btn:hover {
+      border-color: var(--marema-mint);
+      color: var(--marema-mint);
+    }
+
+    .lb-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+
+    .lb-table th {
+      text-align: left;
+      color: var(--marema-purple);
+      padding: 4px 6px;
+      border-bottom: 1px solid rgba(207, 48, 255, 0.2);
+      font-weight: 700;
+    }
+
+    .lb-table td {
+      padding: 5px 6px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+    }
+
+    .lb-table tr:first-child td {
+      color: var(--marema-mint);
+      font-weight: 700;
+    }
+
+    .lb-table td.pts-col,
+    .lb-table th.pts-col {
+      text-align: right;
+    }
+
+    .lb-empty {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 18px 8px;
+      font-size: 11px;
+    }
+
+    .reward-panel {
+      display: none;
+      flex-shrink: 0;
+      padding: 9px 14px;
+      background: #100926;
+      border-top: 1px solid rgba(18, 246, 147, 0.4);
+      text-align: center;
+    }
+
+    .reward-panel.visible {
+      display: block;
+    }
+
+    .reward-panel h2 {
+      color: var(--marema-mint);
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .coupon-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--marema-mint-soft);
+      border: 1px dashed var(--marema-mint);
+      padding: 4px 10px;
+      border-radius: 6px;
+      margin-top: 3px;
+    }
+
+    .coupon-code {
+      color: var(--marema-mint);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .copy-btn {
+      background: var(--marema-mint);
+      color: #05030d;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 9px;
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .footer-bar {
+      flex-shrink: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      background: #070412;
+      border-top: 1px solid rgba(207, 48, 255, 0.16);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .keycap {
+      display: inline-block;
+      padding: 1px 5px;
+      border-radius: 4px;
+      border: 1px solid rgba(18, 246, 147, 0.45);
+      background: rgba(18, 246, 147, 0.12);
+      color: var(--marema-mint);
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-shell">
+    <div class="top-hud">
+      <a class="brand-link" href="https://tecnomarema.com.ar/" target="_blank" rel="noopener noreferrer">
+        TECNOMAREMA<span>.COM.AR</span>
+      </a>
+      <div class="stats">
+        <div>LVL: <strong id="lvlHud">1/20</strong></div>
+        <div>BOTS: <strong id="botsHud">0/0</strong></div>
+        <div>PTS: <strong id="scoreHud">00000</strong></div>
+        <div>VIDAS: <strong id="livesHud">3</strong></div>
+      </div>
+    </div>
+
+    <div class="player-bar">
+      <div class="player-input-group">
+        <label for="playerNameInput">JUGADOR:</label>
+        <input
+          id="playerNameInput"
+          class="player-input"
+          type="text"
+          maxlength="14"
+          placeholder="Tu nombre"
+          autocomplete="off"
+        />
+      </div>
+      <div class="hi-controls">
+        <div class="hi-badge" id="hiHud">HI: <strong>00000</strong> (---)</div>
+        <button id="openTop10Btn" class="top10-btn" type="button">★ TOP 10</button>
+      </div>
+    </div>
+
+    <div class="level-bar-wrap">
+      <div class="level-bar-fill" id="levelBar"></div>
+    </div>
+
+    <div class="canvas-stage">
+      <canvas id="gameCanvas" width="680" height="480"></canvas>
+
+      <!-- Modal Ranking Top 10 -->
+      <div class="leaderboard-overlay" id="leaderboardOverlay">
+        <div class="leaderboard-card">
+          <div class="leaderboard-header">
+            <h3>★ TOP 10 HIGHSCORES // MAREMA</h3>
+            <button id="closeTop10Btn" class="close-lb-btn" type="button">CERRAR [ESC]</button>
+          </div>
+          <div id="leaderboardBody"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="reward-panel" id="rewardPanel">
+      <h2>¡20/20 SECTORES SUPERADOS! TU 50% OFF ESTÁ LISTO</h2>
+      <div class="coupon-row">
+        <span class="coupon-code" id="promoCodeText">MAREMA50-BOMBER</span>
+        <button class="copy-btn" id="copyCodeBtn" type="button">COPIAR</button>
+      </div>
+    </div>
+
+    <div class="footer-bar">
+      <div>
+        <span class="keycap">←</span> <span class="keycap">↑</span> <span class="keycap">↓</span> <span class="keycap">→</span> Mover &nbsp;
+        <span class="keycap">ESPACIO</span> Bomba
+      </div>
+      <div id="statusHud">INICIO</div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const lvlHud = document.getElementById("lvlHud");
+    const botsHud = document.getElementById("botsHud");
+    const scoreHud = document.getElementById("scoreHud");
+    const livesHud = document.getElementById("livesHud");
+    const levelBar = document.getElementById("levelBar");
+    const statusHud = document.getElementById("statusHud");
+    const rewardPanel = document.getElementById("rewardPanel");
+    const promoCodeText = document.getElementById("promoCodeText");
+    const copyCodeBtn = document.getElementById("copyCodeBtn");
+    const playerNameInput = document.getElementById("playerNameInput");
+    const hiHud = document.getElementById("hiHud");
+
+    const openTop10Btn = document.getElementById("openTop10Btn");
+    const closeTop10Btn = document.getElementById("closeTop10Btn");
+    const leaderboardOverlay = document.getElementById("leaderboardOverlay");
+    const leaderboardBody = document.getElementById("leaderboardBody");
+
+    const PROMO_CODE = "MAREMA50-BOMBER";
+    const CUSTOM_LOGO_URL = "";
+    const STORAGE_KEY_TOP10 = "tecnomarema_bomber_top10_v1";
+    const STORAGE_KEY_NAME = "tecnomarema_bomber_player_v1";
+
+    const MAX_LEVEL = 20;
+    const W = canvas.width;
+    const H = canvas.height;
+
+    const MINT = "#12f693";
+    const PURPLE = "#cf30ff";
+    const DANGER = "#ff3366";
+
+    const COLS = 17;
+    const ROWS = 12;
+    const TILE = 40;
+
+    let grid = [];
+    let bombs = [];
+    let flames = [];
+    let enemies = [];
+    let particles = [];
+    let totalEnemiesInLevel = 0;
+    let defeatedEnemiesInLevel = 0;
+
+    promoCodeText.textContent = PROMO_CODE;
+
+    let customLogoImg = null;
+    let customLogoLoaded = false;
+    if (CUSTOM_LOGO_URL) {
+      customLogoImg = new Image();
+      customLogoImg.onload = () => {
+        customLogoLoaded = true;
+      };
+      customLogoImg.src = CUSTOM_LOGO_URL;
+    }
+
+    let playerName = (localStorage.getItem(STORAGE_KEY_NAME) || "PILOTO").trim().toUpperCase() || "PILOTO";
+    playerNameInput.value = playerName;
+
+    function loadTop10() {
+      try {
+        const list = JSON.parse(localStorage.getItem(STORAGE_KEY_TOP10));
+        if (Array.isArray(list)) {
+          return list
+            .filter((item) => item && typeof item.score === "number")
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 10);
+        }
+      } catch (_) {}
+      return [];
+    }
+
+    let top10List = loadTop10();
+
+    function saveRunToTop10(name, finalScore, reachedLevel) {
+      const cleanScore = Math.floor(finalScore);
+      if (cleanScore <= 0) return;
+
+      top10List.push({
+        name: name || "PILOTO",
+        score: cleanScore,
+        level: reachedLevel
+      });
+
+      top10List.sort((a, b) => b.score - a.score);
+      top10List = top10List.slice(0, 10);
+      localStorage.setItem(STORAGE_KEY_TOP10, JSON.stringify(top10List));
+      renderLeaderboard();
+    }
+
+    function renderLeaderboard() {
+      if (top10List.length === 0) {
+        leaderboardBody.innerHTML = `<div class="lb-empty">Todavía no hay puntajes registrados.<br>¡Jugá una partida para entrar al Top 10!</div>`;
+        return;
+      }
+
+      const rowsHtml = top10List
+        .map(
+          (entry, idx) => `
+          <tr>
+            <td>#${idx + 1}</td>
+            <td>${entry.name}</td>
+            <td>LVL ${entry.level}</td>
+            <td class="pts-col">${formatPts(entry.score)}</td>
+          </tr>
+        `
+        )
+        .join("");
+
+      leaderboardBody.innerHTML = `
+        <table class="lb-table">
+          <thead>
+            <tr>
+              <th>POS</th>
+              <th>JUGADOR</th>
+              <th>NIVEL</th>
+              <th class="pts-col">PUNTOS</th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      `;
+    }
+
+    const keys = { left: false, right: false, up: false, down: false };
+
+    let state = "START";
+    let level = 1;
+    let lives = 3;
+    let score = 0;
+    let invulnFrames = 0;
+    let maxBombs = 2;
+    let blastRange = 2;
+
+    const player = {
+      x: TILE * 1.5,
+      y: TILE * 1.5,
+      radius: 10.5,
+      speed: 3.1
+    };
+
+    const stars = Array.from({ length: 75 }, (_, idx) => {
+      const tintRoll = idx % 7;
+      let color = "#f6f2ff";
+      if (tintRoll === 0 || tintRoll === 1) color = MINT;
+      else if (tintRoll === 2 || tintRoll === 3) color = PURPLE;
+
+      return {
+        x: Math.random() * W,
+        y: Math.random() * H,
+        size: 1 + (idx % 3) * 0.65,
+        twinkle: Math.random() * Math.PI * 2,
+        speed: 0.03 + (idx % 3) * 0.015,
+        color
+      };
+    });
+
+    function drawRoundedBox(x, y, w, h, r) {
+      const radius = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.arcTo(x + w, y, x + w, y + h, radius);
+      ctx.arcTo(x + w, y + h, x, y + h, radius);
+      ctx.arcTo(x, y + h, x, y, radius);
+      ctx.arcTo(x, y, x + w, y, radius);
+      ctx.closePath();
+    }
+
+    function formatPts(val) {
+      return String(Math.floor(val)).padStart(5, "0");
+    }
+
+    function syncHighScore() {
+      const bestSaved = top10List.length > 0 ? top10List[0] : { score: 0, name: "---" };
+      if (score > bestSaved.score) {
+        hiHud.innerHTML = `HI: <strong>${formatPts(score)}</strong> (${playerName})`;
+      } else {
+        hiHud.innerHTML = `HI: <strong>${formatPts(bestSaved.score)}</strong> (${bestSaved.name})`;
+      }
+    }
+
+    function getLevelConfig(lvl) {
+      return {
+        enemyCount: lvl < 3 ? 2 : lvl < 7 ? 3 : lvl < 13 ? 4 : 5,
+        enemySpeed: 1.25 + (lvl - 1) * 0.075,
+        destructibleDensity: Math.min(0.62, 0.36 + (lvl - 1) * 0.014),
+        blastRange: lvl >= 10 ? 3 : 2,
+        maxBombs: lvl >= 6 ? 3 : 2
+      };
+    }
+
+    function hasBombAt(col, row) {
+      return bombs.some((b) => b.col === col && b.row === row);
+    }
+
+    // Devuelve si una bomba en (col, row) bloquea el movimiento del jugador
+    function isBombBlockingPlayer(col, row, nx, ny, radius) {
+      const bomb = bombs.find((b) => b.col === col && b.row === row);
+      if (!bomb) return false;
+
+      // Mientras tenga gracia inicial o el jugador aún esté tocando/saliendo de esa celda, no lo traba
+      if (bomb.graceTimer > 0) return false;
+
+      const playerOverlapsBombCell =
+        Math.abs(nx - bomb.x) < TILE * 0.72 && Math.abs(ny - bomb.y) < TILE * 0.72;
+
+      return !playerOverlapsBombCell;
+    }
+
+    function canEntityMoveTo(nx, ny, radius, isPlayer = false) {
+      const m = radius - 3;
+      const cells = [
+        { c: Math.floor((nx - m) / TILE), r: Math.floor((ny - m) / TILE) },
+        { c: Math.floor((nx + m) / TILE), r: Math.floor((ny - m) / TILE) },
+        { c: Math.floor((nx - m) / TILE), r: Math.floor((ny + m) / TILE) },
+        { c: Math.floor((nx + m) / TILE), r: Math.floor((ny + m) / TILE) }
+      ];
+
+      for (const cell of cells) {
+        if (cell.r < 0 || cell.r >= ROWS || cell.c < 0 || cell.c >= COLS) return false;
+        if (grid[cell.r][cell.c] === 1 || grid[cell.r][cell.c] === 2) return false;
+
+        if (isPlayer) {
+          if (isBombBlockingPlayer(cell.c, cell.r, nx, ny, radius)) return false;
+        } else {
+          if (hasBombAt(cell.c, cell.r)) return false;
+        }
+      }
+      return true;
+    }
+
+    function initLevel(targetLvl) {
+      level = targetLvl;
+      const cfg = getLevelConfig(level);
+      maxBombs = cfg.maxBombs;
+      blastRange = cfg.blastRange;
+      bombs = [];
+      flames = [];
+      enemies = [];
+      particles = [];
+      invulnFrames = 45;
+
+      grid = Array.from({ length: ROWS }, (_, r) =>
+        Array.from({ length: COLS }, (_, c) => {
+          if (r === 0 || r === ROWS - 1 || c === 0 || c === COLS - 1) return 1;
+          if (r % 2 === 0 && c % 2 === 0) return 1;
+          return 0;
+        })
+      );
+
+      const safeCells = new Set(["1,1", "2,1", "1,2"]);
+
+      for (let r = 1; r < ROWS - 1; r++) {
+        for (let c = 1; c < COLS - 1; c++) {
+          if (grid[r][c] === 0 && !safeCells.has(`${c},${r}`)) {
+            if (Math.random() < cfg.destructibleDensity) {
+              grid[r][c] = 2;
+            }
+          }
+        }
+      }
+
+      player.x = TILE * 1.5;
+      player.y = TILE * 1.5;
+
+      const candidateSpawns = [];
+      for (let r = 1; r < ROWS - 1; r++) {
+        for (let c = 1; c < COLS - 1; c++) {
+          if (grid[r][c] === 0 && Math.hypot(c - 1, r - 1) >= 6) {
+            candidateSpawns.push({ col: c, row: r });
+          }
+        }
+      }
+
+      for (let i = candidateSpawns.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [candidateSpawns[i], candidateSpawns[j]] = [candidateSpawns[j], candidateSpawns[i]];
+      }
+
+      const dirs = [
+        { x: 1, y: 0 },
+        { x: -1, y: 0 },
+        { x: 0, y: 1 },
+        { x: 0, y: -1 }
+      ];
+
+      for (let i = 0; i < cfg.enemyCount; i++) {
+        const sp = candidateSpawns[i % candidateSpawns.length] || { col: COLS - 2, row: ROWS - 2 };
+        const d = dirs[i % dirs.length];
+        enemies.push({
+          x: sp.col * TILE + TILE / 2,
+          y: sp.row * TILE + TILE / 2,
+          dirX: d.x,
+          dirY: d.y,
+          speed: cfg.enemySpeed,
+          alive: true,
+          turnCooldown: 0
+        });
+      }
+
+      totalEnemiesInLevel = enemies.length;
+      defeatedEnemiesInLevel = 0;
+
+      state = "PLAYING";
+      statusHud.textContent = `SECTOR ${level}`;
+      updateHUD();
+    }
+
+    function startNewGame() {
+      playerName = (playerNameInput.value || "PILOTO").trim().toUpperCase() || "PILOTO";
+      playerNameInput.value = playerName;
+      localStorage.setItem(STORAGE_KEY_NAME, playerName);
+
+      lives = 3;
+      score = 0;
+      rewardPanel.classList.remove("visible");
+      syncHighScore();
+      initLevel(1);
+    }
+
+    function placeBomb() {
+      if (state !== "PLAYING" || leaderboardOverlay.classList.contains("open")) return;
+      if (bombs.length >= maxBombs) return;
+
+      const col = Math.floor(player.x / TILE);
+      const row = Math.floor(player.y / TILE);
+      if (grid[row]?.[col] !== 0) return;
+      if (hasBombAt(col, row)) return;
+
+      bombs.push({
+        col,
+        row,
+        x: col * TILE + TILE / 2,
+        y: row * TILE + TILE / 2,
+        timer: 105,
+        graceTimer: 16,
+        range: blastRange
+      });
+    }
+
+    function spawnBurst(x, y, color, count = 12) {
+      for (let i = 0; i < count; i++) {
+        const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.4;
+        const spd = 1.4 + Math.random() * 3.4;
+        particles.push({
+          x,
+          y,
+          vx: Math.cos(angle) * spd,
+          vy: Math.sin(angle) * spd,
+          size: 2.5 + Math.random() * 2.5,
+          life: 20 + Math.random() * 10,
+          color
+        });
+      }
+    }
+
+    function detonateBomb(bomb) {
+      const blastCells = [{ col: bomb.col, row: bomb.row }];
+      const dirs = [
+        { dc: 1, dr: 0 },
+        { dc: -1, dr: 0 },
+        { dc: 0, dr: 1 },
+        { dc: 0, dr: -1 }
+      ];
+
+      for (const { dc, dr } of dirs) {
+        for (let step = 1; step <= bomb.range; step++) {
+          const nc = bomb.col + dc * step;
+          const nr = bomb.row + dr * step;
+          if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS) break;
+          if (grid[nr][nc] === 1) break;
+
+          blastCells.push({ col: nc, row: nr });
+
+          if (grid[nr][nc] === 2) {
+            grid[nr][nc] = 0;
+            score += 15 * level;
+            spawnBurst(nc * TILE + TILE / 2, nr * TILE + TILE / 2, PURPLE, 8);
+            break;
+          }
+        }
+      }
+
+      for (const cell of blastCells) {
+        flames.push({
+          col: cell.col,
+          row: cell.row,
+          life: 22
+        });
+      }
+    }
+
+    function isCellInFlame(col, row) {
+      return flames.some((f) => f.col === col && f.row === row);
+    }
+
+    function damagePlayer() {
+      if (invulnFrames > 0) return;
+      lives--;
+      invulnFrames = 75;
+      spawnBurst(player.x, player.y, DANGER, 18);
+
+      if (lives <= 0) {
+        lives = 0;
+        state = "GAME_OVER";
+        statusHud.textContent = "GAME OVER";
+        saveRunToTop10(playerName, score, level);
+        updateHUD();
+        return;
+      }
+
+      player.x = TILE * 1.5;
+      player.y = TILE * 1.5;
+      updateHUD();
+    }
+
+    function updateHUD() {
+      lvlHud.textContent = `${level}/${MAX_LEVEL}`;
+      botsHud.textContent = `${defeatedEnemiesInLevel}/${totalEnemiesInLevel}`;
+      scoreHud.textContent = formatPts(score);
+      livesHud.textContent = lives;
+
+      const botPct = totalEnemiesInLevel > 0 ? defeatedEnemiesInLevel / totalEnemiesInLevel : 0;
+      const totalPct = (((level - 1) + (state === "WIN" ? 1 : botPct)) / MAX_LEVEL) * 100;
+      levelBar.style.width = `${Math.min(100, totalPct)}%`;
+      syncHighScore();
+    }
+
+    function updateEnemy(enemy) {
+      if (!enemy.alive) return;
+
+      const dirs = [
+        { x: 1, y: 0 },
+        { x: -1, y: 0 },
+        { x: 0, y: 1 },
+        { x: 0, y: -1 }
+      ];
+
+      if (enemy.turnCooldown > 0) enemy.turnCooldown--;
+
+      const centerX = (Math.floor(enemy.x / TILE) + 0.5) * TILE;
+      const centerY = (Math.floor(enemy.y / TILE) + 0.5) * TILE;
+      const nearCenter = Math.hypot(enemy.x - centerX, enemy.y - centerY) < 3;
+
+      const blocked = !canEntityMoveTo(
+        enemy.x + enemy.dirX * (enemy.speed + 4),
+        enemy.y + enemy.dirY * (enemy.speed + 4),
+        11,
+        false
+      );
+
+      if (blocked || (nearCenter && enemy.turnCooldown === 0 && Math.random() < 0.3)) {
+        const valid = dirs.filter((d) => {
+          const isReverse = d.x === -enemy.dirX && d.y === -enemy.dirY;
+          if (isReverse && !blocked) return false;
+          return canEntityMoveTo(centerX + d.x * 10, centerY + d.y * 10, 11, false);
+        });
+
+        if (valid.length > 0) {
+          const pick = valid[Math.floor(Math.random() * valid.length)];
+          enemy.x = centerX;
+          enemy.y = centerY;
+          enemy.dirX = pick.x;
+          enemy.dirY = pick.y;
+          enemy.turnCooldown = 14;
+        } else {
+          enemy.dirX *= -1;
+          enemy.dirY *= -1;
+        }
+      }
+
+      const nx = enemy.x + enemy.dirX * enemy.speed;
+      const ny = enemy.y + enemy.dirY * enemy.speed;
+      if (canEntityMoveTo(nx, ny, 11, false)) {
+        enemy.x = nx;
+        enemy.y = ny;
+      }
+
+      const eCol = Math.floor(enemy.x / TILE);
+      const eRow = Math.floor(enemy.y / TILE);
+      if (isCellInFlame(eCol, eRow)) {
+        enemy.alive = false;
+        defeatedEnemiesInLevel++;
+        score += 100 * level;
+        spawnBurst(enemy.x, enemy.y, MINT, 14);
+        updateHUD();
+      }
+    }
+
+    function update() {
+      for (const st of stars) {
+        st.twinkle += st.speed;
+      }
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life--;
+        if (p.life <= 0) particles.splice(i, 1);
+      }
+
+      if (state !== "PLAYING" || leaderboardOverlay.classList.contains("open")) return;
+
+      if (invulnFrames > 0) invulnFrames--;
+
+      // Actualizar timers de bombas
+      for (let i = bombs.length - 1; i >= 0; i--) {
+        const b = bombs[i];
+        if (b.graceTimer > 0) b.graceTimer--;
+        b.timer--;
+        if (b.timer <= 0) {
+          bombs.splice(i, 1);
+          detonateBomb(b);
+        }
+      }
+
+      let vx = 0;
+      let vy = 0;
+      if (keys.left) vx -= 1;
+      if (keys.right) vx += 1;
+      if (keys.up) vy -= 1;
+      if (keys.down) vy += 1;
+
+      if (vx !== 0 && vy !== 0) {
+        const inv = 1 / Math.SQRT2;
+        vx *= inv;
+        vy *= inv;
+      }
+
+      if (vx !== 0 || vy !== 0) {
+        const stepX = vx * player.speed;
+        const stepY = vy * player.speed;
+
+        if (canEntityMoveTo(player.x + stepX, player.y, player.radius, true)) {
+          player.x += stepX;
+        } else if (vx !== 0) {
+          const cy = (Math.floor(player.y / TILE) + 0.5) * TILE;
+          if (Math.abs(player.y - cy) < 13) {
+            player.y += Math.sign(cy - player.y) * 1.8;
+          }
+        }
+
+        if (canEntityMoveTo(player.x, player.y + stepY, player.radius, true)) {
+          player.y += stepY;
+        } else if (vy !== 0) {
+          const cx = (Math.floor(player.x / TILE) + 0.5) * TILE;
+          if (Math.abs(player.x - cx) < 13) {
+            player.x += Math.sign(cx - player.x) * 1.8;
+          }
+        }
+      }
+
+      // Actualizar llamas
+      for (let i = flames.length - 1; i >= 0; i--) {
+        flames[i].life--;
+        if (flames[i].life <= 0) flames.splice(i, 1);
+      }
+
+      // Daño por llama al jugador
+      const curCol = Math.floor(player.x / TILE);
+      const curRow = Math.floor(player.y / TILE);
+      if (isCellInFlame(curCol, curRow)) {
+        damagePlayer();
+        if (state !== "PLAYING") return;
+      }
+
+      // Actualizar bots enemigos
+      for (const enemy of enemies) {
+        updateEnemy(enemy);
+        if (
+          enemy.alive &&
+          Math.hypot(player.x - enemy.x, player.y - enemy.y) < player.radius + 10
+        ) {
+          damagePlayer();
+          if (state !== "PLAYING") return;
+          break;
+        }
+      }
+
+      // Verificar si se completó el sector
+      if (defeatedEnemiesInLevel >= totalEnemiesInLevel && totalEnemiesInLevel > 0) {
+        score += 220 * level;
+        updateHUD();
+
+        if (level >= MAX_LEVEL) {
+          state = "WIN";
+          statusHud.textContent = "20/20 COMPLETADO";
+          saveRunToTop10(playerName, score, MAX_LEVEL);
+          updateHUD();
+          rewardPanel.classList.add("visible");
+        } else {
+          state = "LEVEL_UP";
+          statusHud.textContent = `SECTOR ${level} SUPERADO`;
+        }
+        return;
+      }
+
+      updateHUD();
+    }
+
+    function drawArena() {
+      ctx.fillStyle = "#05030d";
+      ctx.fillRect(0, 0, W, H);
+
+      for (const st of stars) {
+        const alpha = 0.35 + 0.65 * Math.sin(st.twinkle);
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = st.color;
+        ctx.beginPath();
+        ctx.arc(st.x, st.y, st.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      if (!grid || grid.length === 0) return;
+
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          const x = c * TILE;
+          const y = r * TILE;
+          const cell = grid[r][c];
+
+          if (cell === 1) {
+            ctx.fillStyle = "rgba(19, 12, 43, 0.95)";
+            ctx.fillRect(x + 1, y + 1, TILE - 2, TILE - 2);
+            ctx.strokeStyle = "rgba(207, 48, 255, 0.7)";
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(x + 2, y + 2, TILE - 4, TILE - 4);
+          } else if (cell === 2) {
+            ctx.fillStyle = "rgba(207, 48, 255, 0.24)";
+            ctx.fillRect(x + 4, y + 4, TILE - 8, TILE - 8);
+            ctx.strokeStyle = "rgba(18, 246, 147, 0.55)";
+            ctx.lineWidth = 1.2;
+            ctx.strokeRect(x + 4, y + 4, TILE - 8, TILE - 8);
+          }
+        }
+      }
+    }
+
+    function drawBombsAndFlames() {
+      for (const b of bombs) {
+        const pulse = 10 + Math.sin(b.timer * 0.25) * 1.5;
+        ctx.save();
+        ctx.fillStyle = "#1b1038";
+        ctx.strokeStyle = MINT;
+        ctx.shadowColor = MINT;
+        ctx.shadowBlur = 10;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, pulse, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      for (const f of flames) {
+        const x = f.col * TILE;
+        const y = f.row * TILE;
+        ctx.save();
+        ctx.fillStyle = "rgba(255, 51, 102, 0.55)";
+        ctx.shadowColor = DANGER;
+        ctx.shadowBlur = 12;
+        ctx.fillRect(x + 4, y + 4, TILE - 8, TILE - 8);
+
+        ctx.fillStyle = MINT;
+        ctx.fillRect(x + 11, y + 11, TILE - 22, TILE - 22);
+        ctx.restore();
+      }
+    }
+
+    function drawEnemies() {
+      for (const enemy of enemies) {
+        if (!enemy.alive) continue;
+        ctx.save();
+        ctx.fillStyle = DANGER;
+        ctx.shadowColor = DANGER;
+        ctx.shadowBlur = 10;
+        drawRoundedBox(enemy.x - 10, enemy.y - 10, 20, 20, 5);
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = "#080514";
+        ctx.fillRect(enemy.x - 5, enemy.y - 4, 3, 3);
+        ctx.fillRect(enemy.x + 2, enemy.y - 4, 3, 3);
+        ctx.restore();
+      }
+    }
+
+    function drawPlayer() {
+      if (state === "START") return;
+      if (invulnFrames > 0 && Math.floor(invulnFrames / 4) % 2 === 0) return;
+
+      ctx.save();
+      ctx.fillStyle = MINT;
+      ctx.shadowColor = MINT;
+      ctx.shadowBlur = 13;
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = PURPLE;
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, player.radius * 0.42, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawParticles() {
+      for (const p of particles) {
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = Math.max(0, p.life / 30);
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function drawHexLogo(cx, cy, radius) {
+      ctx.save();
+      ctx.translate(cx, cy);
+
+      if (customLogoLoaded && customLogoImg) {
+        const size = radius * 2.1;
+        ctx.drawImage(customLogoImg, -size / 2, -size / 2, size, size);
+        ctx.restore();
+        return;
+      }
+
+      ctx.shadowColor = MINT;
+      ctx.shadowBlur = 16;
+      ctx.fillStyle = MINT;
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i - Math.PI / 6;
+        const px = Math.cos(angle) * radius;
+        const py = Math.sin(angle) * radius;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = "#080514";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = "#06040f";
+      ctx.font = `900 ${Math.round(radius * 0.72)}px ui-monospace, monospace`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("TM", 0, 2);
+      ctx.restore();
+    }
+
+    function drawStartScreen() {
+      const boxX = 32;
+      const boxY = 18;
+      const boxW = W - 64;
+      const boxH = H - 36;
+
+      ctx.save();
+      ctx.fillStyle = "rgba(8, 5, 20, 0.92)";
+      ctx.strokeStyle = "rgba(207, 48, 255, 0.55)";
+      ctx.lineWidth = 1.5;
+      drawRoundedBox(boxX, boxY, boxW, boxH, 12);
+      ctx.fill();
+      ctx.stroke();
+
+      drawHexLogo(W / 2, boxY + 46, 28);
+
+      ctx.textAlign = "center";
+      ctx.fillStyle = MINT;
+      ctx.font = "bold 18px monospace";
+      ctx.fillText("CYBER BOMBERMAN EXPRESS", W / 2, boxY + 92);
+
+      ctx.fillStyle = PURPLE;
+      ctx.font = "bold 11px monospace";
+      ctx.fillText("SUPERÁ LOS 20 SECTORES Y GANÁ 50% OFF", W / 2, boxY + 112);
+
+      const infoX = boxX + 24;
+      const infoY = boxY + 128;
+      const infoW = boxW - 48;
+      const infoH = 212;
+
+      ctx.fillStyle = "rgba(19, 12, 43, 0.94)";
+      ctx.strokeStyle = "rgba(18, 246, 147, 0.3)";
+      ctx.lineWidth = 1;
+      drawRoundedBox(infoX, infoY, infoW, infoH, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.textAlign = "left";
+      ctx.fillStyle = MINT;
+      ctx.font = "bold 12px monospace";
+      ctx.fillText("¿CÓMO FUNCIONA?", infoX + 16, infoY + 22);
+
+      ctx.fillStyle = "#f6f2ff";
+      ctx.font = "11px monospace";
+      ctx.fillText("• Movete por la arena usando las flechas [←] [↑] [↓] [→].", infoX + 16, infoY + 46);
+      ctx.fillText("• Presioná [ESPACIO] para colocar bombas y abrir rutas.", infoX + 16, infoY + 68);
+      ctx.fillText("• Eliminá todos los cyber-bots del sector para avanzar.", infoX + 16, infoY + 90);
+
+      ctx.fillStyle = DANGER;
+      ctx.font = "bold 11px monospace";
+      ctx.fillText("• ¡CUIDADO! Alejate de tus propias bombas y de las llamas.", infoX + 16, infoY + 116);
+
+      ctx.fillStyle = PURPLE;
+      ctx.font = "bold 11px monospace";
+      ctx.fillText("DESAFÍO:", infoX + 16, infoY + 144);
+
+      ctx.fillStyle = "#f6f2ff";
+      ctx.font = "11px monospace";
+      ctx.fillText("• 20 sectores con más bots, velocidad y mayor radio de explosión.", infoX + 16, infoY + 166);
+      ctx.fillText("• Tenés 3 vidas y tu puntaje compite en el Top 10 Highscores.", infoX + 16, infoY + 188);
+
+      const pulse = 0.75 + 0.25 * Math.sin(Date.now() * 0.007);
+      ctx.textAlign = "center";
+      ctx.globalAlpha = pulse;
+      ctx.fillStyle = MINT;
+      ctx.font = "bold 13px monospace";
+      ctx.fillText("PRESIONÁ [↑] O HACÉ CLIC AQUÍ PARA INICIAR", W / 2, boxY + boxH - 18);
+      ctx.restore();
+    }
+
+    function drawOverlay() {
+      if (state === "PLAYING") return;
+
+      if (state === "START") {
+        drawStartScreen();
+        return;
+      }
+
+      ctx.save();
+      ctx.fillStyle = "rgba(5, 3, 13, 0.84)";
+      ctx.fillRect(0, 0, W, H);
+      ctx.textAlign = "center";
+
+      if (state === "LEVEL_UP") {
+        ctx.fillStyle = MINT;
+        ctx.font = "bold 22px monospace";
+        ctx.fillText(`SECTOR ${level} SUPERADO`, W / 2, H / 2 - 18);
+
+        ctx.fillStyle = PURPLE;
+        ctx.font = "13px monospace";
+        ctx.fillText(`Presioná [↑] o hacé clic para el Sector ${level + 1}`, W / 2, H / 2 + 16);
+      } else if (state === "GAME_OVER") {
+        ctx.fillStyle = DANGER;
+        ctx.font = "bold 22px monospace";
+        ctx.fillText(`ELIMINADO EN SECTOR ${level}`, W / 2, H / 2 - 22);
+
+        ctx.fillStyle = MINT;
+        ctx.font = "13px monospace";
+        ctx.fillText(`${playerName}: ${formatPts(score)} PTS`, W / 2, H / 2 + 6);
+
+        ctx.fillStyle = PURPLE;
+        ctx.font = "12px monospace";
+        ctx.fillText("Presioná [↑] o hacé clic para reintentar", W / 2, H / 2 + 34);
+      } else if (state === "WIN") {
+        drawHexLogo(W / 2, H / 2 - 64, 28);
+
+        ctx.fillStyle = MINT;
+        ctx.font = "bold 20px monospace";
+        ctx.fillText("¡20 / 20 SECTORES SUPERADOS!", W / 2, H / 2 - 12);
+
+        ctx.fillStyle = PURPLE;
+        ctx.font = "13px monospace";
+        ctx.fillText(`Puntaje: ${formatPts(score)} — Cupón 50% OFF abajo`, W / 2, H / 2 + 18);
+      }
+
+      ctx.restore();
+    }
+
+    function loop() {
+      update();
+      drawArena();
+      drawBombsAndFlames();
+      drawEnemies();
+      drawParticles();
+      drawPlayer();
+      drawOverlay();
+      requestAnimationFrame(loop);
+    }
+
+    openTop10Btn.addEventListener("click", () => {
+      renderLeaderboard();
+      leaderboardOverlay.classList.add("open");
+    });
+
+    closeTop10Btn.addEventListener("click", () => {
+      leaderboardOverlay.classList.remove("open");
+    });
+
+    leaderboardOverlay.addEventListener("click", (e) => {
+      if (e.target === leaderboardOverlay) {
+        leaderboardOverlay.classList.remove("open");
+      }
+    });
+
+    playerNameInput.addEventListener("input", () => {
+      playerName = (playerNameInput.value || "PILOTO").trim().toUpperCase() || "PILOTO";
+      localStorage.setItem(STORAGE_KEY_NAME, playerName);
+    });
+
+    playerNameInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        playerNameInput.blur();
+      }
+      e.stopPropagation();
+    });
+
+    canvas.addEventListener("click", () => {
+      if (leaderboardOverlay.classList.contains("open")) return;
+      if (state === "START" || state === "GAME_OVER" || state === "WIN") {
+        startNewGame();
+      } else if (state === "LEVEL_UP") {
+        initLevel(level + 1);
+      } else if (state === "PLAYING") {
+        placeBomb();
+      }
+    });
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && leaderboardOverlay.classList.contains("open")) {
+        leaderboardOverlay.classList.remove("open");
+        return;
+      }
+
+      if (leaderboardOverlay.classList.contains("open")) return;
+
+      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(e.code)) {
+        e.preventDefault();
+      }
+
+      if (e.code === "ArrowUp") {
+        keys.up = true;
+        if (state === "START" || state === "GAME_OVER" || state === "WIN") {
+          startNewGame();
+        } else if (state === "LEVEL_UP") {
+          initLevel(level + 1);
+        }
+      } else if (e.code === "ArrowDown") {
+        keys.down = true;
+      } else if (e.code === "ArrowLeft") {
+        keys.left = true;
+      } else if (e.code === "ArrowRight") {
+        keys.right = true;
+      } else if (e.code === "Space") {
+        if (state === "PLAYING") {
+          placeBomb();
+        }
+      }
+    });
+
+    window.addEventListener("keyup", (e) => {
+      if (e.code === "ArrowUp") keys.up = false;
+      else if (e.code === "ArrowDown") keys.down = false;
+      else if (e.code === "ArrowLeft") keys.left = false;
+      else if (e.code === "ArrowRight") keys.right = false;
+    });
+
+    copyCodeBtn.addEventListener("click", () => {
+      navigator.clipboard?.writeText(PROMO_CODE);
+      copyCodeBtn.textContent = "¡COPIADO!";
+      setTimeout(() => {
+        copyCodeBtn.textContent = "COPIAR";
+      }, 1800);
+    });
+
+    renderLeaderboard();
+    updateHUD();
+    loop();
+  </script>
+</body>
+</html>

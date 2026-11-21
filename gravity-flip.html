@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gravity Flip // Tecnomarema</title>
+  <style>
+    :root {
+      --bg-cosmos: #05030d;
+      --bg-panel: #0b071a;
+      --bg-card: #130c2b;
+      --marema-mint: #12f693;
+      --marema-purple: #cf30ff;
+      --marema-mint-soft: rgba(18, 246, 147, 0.14);
+      --marema-purple-soft: rgba(207, 48, 255, 0.16);
+      --text-main: #f6f2ff;
+      --text-muted: #a699cc;
+      --danger: #ff3366;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      max-height: 100vh;
+      overflow: hidden;
+    }
+
+    body {
+      background:
+        radial-gradient(circle at 20% 15%, rgba(207, 48, 255, 0.18), transparent 45%),
+        radial-gradient(circle at 85% 80%, rgba(18, 246, 147, 0.14), transparent 45%),
+        var(--bg-cosmos);
+      color: var(--text-main);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      height: 100dvh;
+      max-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+    }
+
+    .game-shell {
+      position: relative;
+      width: 100%;
+      max-width: 780px;
+      height: 100%;
+      max-height: calc(100vh - 20px);
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-panel);
+      border: 1px solid rgba(207, 48, 255, 0.38);
+      border-radius: 12px;
+      box-shadow:
+        0 18px 45px rgba(0, 0, 0, 0.72),
+        0 0 26px rgba(207, 48, 255, 0.16),
+        0 0 18px rgba(18, 246, 147, 0.08);
+      overflow: hidden;
+    }
+
+    .top-hud {
+      flex-shrink: 0;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--bg-card);
+      border-bottom: 1px solid rgba(207, 48, 255, 0.24);
+      font-size: 11px;
+    }
+
+    .brand-link {
+      color: var(--marema-mint);
+      text-decoration: none;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+    }
+
+    .brand-link:hover {
+      color: var(--marema-purple);
+    }
+
+    .brand-link span {
+      color: var(--marema-purple);
+    }
+
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .stats strong {
+      color: var(--marema-mint);
+    }
+
+    .player-bar {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 12px;
+      background: #080514;
+      border-bottom: 1px solid rgba(18, 246, 147, 0.14);
+      font-size: 11px;
+    }
+
+    .player-input-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .player-input-group label {
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .player-input {
+      background: var(--bg-card);
+      border: 1px solid rgba(207, 48, 255, 0.42);
+      border-radius: 5px;
+      color: var(--marema-mint);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 7px;
+      width: 100%;
+      max-width: 145px;
+      outline: none;
+    }
+
+    .player-input:focus {
+      border-color: var(--marema-mint);
+    }
+
+    .hi-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .hi-badge {
+      color: var(--marema-purple);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .hi-badge strong {
+      color: var(--marema-mint);
+    }
+
+    .top10-btn {
+      background: var(--marema-purple-soft);
+      border: 1px solid rgba(207, 48, 255, 0.55);
+      color: var(--marema-mint);
+      border-radius: 5px;
+      padding: 3px 8px;
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .top10-btn:hover {
+      background: rgba(18, 246, 147, 0.18);
+      border-color: var(--marema-mint);
+    }
+
+    .level-bar-wrap {
+      flex-shrink: 0;
+      height: 4px;
+      background: #05030d;
+      width: 100%;
+    }
+
+    .level-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--marema-purple), var(--marema-mint));
+      transition: width 0.2s ease;
+    }
+
+    .canvas-stage {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      background: var(--bg-cosmos);
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Modal Top 10 Highscores */
+    .leaderboard-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(5, 3, 13, 0.88);
+      backdrop-filter: blur(3px);
+      z-index: 20;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .leaderboard-overlay.open {
+      display: flex;
+    }
+
+    .leaderboard-card {
+      width: 100%;
+      max-width: 410px;
+      background: #0e0921;
+      border: 1px solid rgba(207, 48, 255, 0.55);
+      border-radius: 10px;
+      box-shadow: 0 0 28px rgba(207, 48, 255, 0.25);
+      padding: 14px 16px;
+    }
+
+    .leaderboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(18, 246, 147, 0.22);
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+    }
+
+    .leaderboard-header h3 {
+      color: var(--marema-mint);
+      font-size: 13px;
+      letter-spacing: 0.6px;
+    }
+
+    .close-lb-btn {
+      background: transparent;
+      border: 1px solid rgba(207, 48, 255, 0.5);
+      color: var(--marema-purple);
+      border-radius: 4px;
+      padding: 2px 7px;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .close-lb-btn:hover {
+      border-color: var(--marema-mint);
+      color: var(--marema-mint);
+    }
+
+    .lb-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+
+    .lb-table th {
+      text-align: left;
+      color: var(--marema-purple);
+      padding: 4px 6px;
+      border-bottom: 1px solid rgba(207, 48, 255, 0.2);
+      font-weight: 700;
+    }
+
+    .lb-table td {
+      padding: 5px 6px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+    }
+
+    .lb-table tr:first-child td {
+      color: var(--marema-mint);
+      font-weight: 700;
+    }
+
+    .lb-table td.pts-col,
+    .lb-table th.pts-col {
+      text-align: right;
+    }
+
+    .lb-empty {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 18px 8px;
+      font-size: 11px;
+    }
+
+    .reward-panel {
+      display: none;
+      flex-shrink: 0;
+      padding: 9px 14px;
+      background: #100926;
+      border-top: 1px solid rgba(18, 246, 147, 0.4);
+      text-align: center;
+    }
+
+    .reward-panel.visible {
+      display: block;
+    }
+
+    .reward-panel h2 {
+      color: var(--marema-mint);
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .coupon-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--marema-mint-soft);
+      border: 1px dashed var(--marema-mint);
+      padding: 4px 10px;
+      border-radius: 6px;
+      margin-top: 3px;
+    }
+
+    .coupon-code {
+      color: var(--marema-mint);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .copy-btn {
+      background: var(--marema-mint);
+      color: #05030d;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 9px;
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .footer-bar {
+      flex-shrink: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      background: #070412;
+      border-top: 1px solid rgba(207, 48, 255, 0.16);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .keycap {
+      display: inline-block;
+      padding: 1px 5px;
+      border-radius: 4px;
+      border: 1px solid rgba(18, 246, 147, 0.45);
+      background: rgba(18, 246, 147, 0.12);
+      color: var(--marema-mint);
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-shell">
+    <div class="top-hud">
+      <a class="brand-link" href="https://tecnomarema.com.ar/" target="_blank" rel="noopener noreferrer">
+        TECNOMAREMA<span>.COM.AR</span>
+      </a>
+      <div class="stats">
+        <div>LVL: <strong id="lvlHud">1/20</strong></div>
+        <div>PTS: <strong id="scoreHud">00000</strong></div>
+        <div>VIDAS: <strong id="livesHud">3</strong></div>
+      </div>
+    </div>
+
+    <div class="player-bar">
+      <div class="player-input-group">
+        <label for="playerNameInput">JUGADOR:</label>
+        <input
+          id="playerNameInput"
+          class="player-input"
+          type="text"
+          maxlength="14"
+          placeholder="Tu nombre"
+          autocomplete="off"
+        />
+      </div>
+      <div class="hi-controls">
+        <div class="hi-badge" id="hiHud">HI: <strong>00000</strong> (---)</div>
+        <button id="openTop10Btn" class="top10-btn" type="button">★ TOP 10</button>
+      </div>
+    </div>
+
+    <div class="level-bar-wrap">
+      <div class="level-bar-fill" id="levelBar"></div>
+    </div>
+
+    <div class="canvas-stage">
+      <canvas id="gameCanvas" width="780" height="440"></canvas>
+
+      <!-- Modal Ranking Top 10 -->
+      <div class="leaderboard-overlay" id="leaderboardOverlay">
+        <div class="leaderboard-card">
+          <div class="leaderboard-header">
+            <h3>★ TOP 10 HIGHSCORES // MAREMA</h3>
+            <button id="closeTop10Btn" class="close-lb-btn" type="button">CERRAR [ESC]</button>
+          </div>
+          <div id="leaderboardBody"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="reward-panel" id="rewardPanel">
+      <h2>¡20/20 NIVELES SUPERADOS! TU 50% OFF ESTÁ LISTO</h2>
+      <div class="coupon-row">
+        <span class="coupon-code" id="promoCodeText">MAREMA50-FLIP</span>
+        <button class="copy-btn" id="copyCodeBtn" type="button">COPIAR</button>
+      </div>
+    </div>
+
+    <div class="footer-bar">
+      <div>
+        <span class="keycap">↑</span> Techo &nbsp;
+        <span class="keycap">↓</span> Piso &nbsp;
+        <span class="keycap">←</span> <span class="keycap">→</span> Mover
+      </div>
+      <div id="statusHud">INICIO</div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const lvlHud = document.getElementById("lvlHud");
+    const scoreHud = document.getElementById("scoreHud");
+    const livesHud = document.getElementById("livesHud");
+    const levelBar = document.getElementById("levelBar");
+    const statusHud = document.getElementById("statusHud");
+    const rewardPanel = document.getElementById("rewardPanel");
+    const promoCodeText = document.getElementById("promoCodeText");
+    const copyCodeBtn = document.getElementById("copyCodeBtn");
+    const playerNameInput = document.getElementById("playerNameInput");
+    const hiHud = document.getElementById("hiHud");
+
+    const openTop10Btn = document.getElementById("openTop10Btn");
+    const closeTop10Btn = document.getElementById("closeTop10Btn");
+    const leaderboardOverlay = document.getElementById("leaderboardOverlay");
+    const leaderboardBody = document.getElementById("leaderboardBody");
+
+    // Configuración editable
+    const PROMO_CODE = "MAREMA50-FLIP";
+    const CUSTOM_LOGO_URL = ""; // Opcional: ruta o URL de tu logo PNG si querés reemplazar el hexágono TM
+    const STORAGE_KEY_TOP10 = "tecnomarema_gravity_top10_v1";
+    const STORAGE_KEY_NAME = "tecnomarema_gravity_player_v1";
+
+    const MAX_LEVEL = 20;
+    const W = canvas.width;
+    const H = canvas.height;
+
+    const MINT = "#12f693";
+    const PURPLE = "#cf30ff";
+    const DANGER = "#ff3366";
+
+    // Límites de la estación espacial de neón
+    const CEILING_Y = 42;
+    const FLOOR_Y = H - 42;
+
+    promoCodeText.textContent = PROMO_CODE;
+
+    let customLogoImg = null;
+    let customLogoLoaded = false;
+    if (CUSTOM_LOGO_URL) {
+      customLogoImg = new Image();
+      customLogoImg.onload = () => {
+        customLogoLoaded = true;
+      };
+      customLogoImg.src = CUSTOM_LOGO_URL;
+    }
+
+    let playerName = (localStorage.getItem(STORAGE_KEY_NAME) || "PILOTO").trim().toUpperCase() || "PILOTO";
+    playerNameInput.value = playerName;
+
+    function loadTop10() {
+      try {
+        const list = JSON.parse(localStorage.getItem(STORAGE_KEY_TOP10));
+        if (Array.isArray(list)) {
+          return list
+            .filter((item) => item && typeof item.score === "number")
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 10);
+        }
+      } catch (_) {}
+      return [];
+    }
+
+    let top10List = loadTop10();
+
+    function saveRunToTop10(name, finalScore, reachedLevel) {
+      const cleanScore = Math.floor(finalScore);
+      if (cleanScore <= 0) return;
+
+      top10List.push({
+        name: name || "PILOTO",
+        score: cleanScore,
+        level: reachedLevel
+      });
+
+      top10List.sort((a, b) => b.score - a.score);
+      top10List = top10List.slice(0, 10);
+      localStorage.setItem(STORAGE_KEY_TOP10, JSON.stringify(top10List));
+      renderLeaderboard();
+    }
+
+    function renderLeaderboard() {
+      if (top10List.length === 0) {
+        leaderboardBody.innerHTML = `<div class="lb-empty">Todavía no hay puntajes registrados.<br>¡Jugá una partida para entrar al Top 10!</div>`;
+        return;
+      }
+
+      const rowsHtml = top10List
+        .map(
+          (entry, idx) => `
+          <tr>
+            <td>#${idx + 1}</td>
+            <td>${entry.name}</td>
+            <td>LVL ${entry.level}</td>
+            <td class="pts-col">${formatPts(entry.score)}</td>
+          </tr>
+        `
+        )
+        .join("");
+
+      leaderboardBody.innerHTML = `
+        <table class="lb-table">
+          <thead>
+            <tr>
+              <th>POS</th>
+              <th>JUGADOR</th>
+              <th>NIVEL</th>
+              <th class="pts-col">PUNTOS</th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      `;
+    }
+
+    const keys = { up: false, down: false, left: false, right: false };
+
+    // Estados: "START" | "PLAYING" | "LEVEL_UP" | "GAME_OVER" | "WIN"
+    let state = "START";
+    let level = 1;
+    let lives = 3;
+    let score = 0;
+    let levelDistance = 0;
+    let targetDistance = 1200;
+    let invulnFrames = 0;
+    let spawnTimer = 0;
+    let plasmaFields = [];
+    let particles = [];
+    let trail = [];
+
+    // Gravedad: 1 = hacia el piso (abajo), -1 = hacia el techo (arriba)
+    let gravityDir = 1;
+
+    const player = {
+      x: 130,
+      y: FLOOR_Y - 28,
+      w: 26,
+      h: 28,
+      vy: 0,
+      flipAccel: 1.45,
+      maxVy: 12.5,
+      moveSpeed: 4.5,
+      minX: 42,
+      maxX: 340
+    };
+
+    // Campo estelar cósmico detrás de la estación
+    const stars = Array.from({ length: 85 }, (_, idx) => {
+      const layer = idx % 3;
+      const tintRoll = idx % 7;
+      let color = "#f6f2ff";
+      if (tintRoll === 0 || tintRoll === 1) color = MINT;
+      else if (tintRoll === 2 || tintRoll === 3) color = PURPLE;
+
+      return {
+        x: Math.random() * W,
+        y: Math.random() * H,
+        size: layer === 0 ? 1.1 : layer === 1 ? 1.7 : 2.3,
+        speedX: layer === 0 ? 0.45 : layer === 1 ? 1.1 : 2.1,
+        twinkle: Math.random() * Math.PI * 2,
+        color
+      };
+    });
+
+    function drawRoundedBox(x, y, w, h, r) {
+      const radius = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.arcTo(x + w, y, x + w, y + h, radius);
+      ctx.arcTo(x + w, y + h, x, y + h, radius);
+      ctx.arcTo(x, y + h, x, y, radius);
+      ctx.arcTo(x, y, x + w, y, radius);
+      ctx.closePath();
+    }
+
+    function formatPts(val) {
+      return String(Math.floor(val)).padStart(5, "0");
+    }
+
+    function syncHighScore() {
+      const bestSaved = top10List.length > 0 ? top10List[0] : { score: 0, name: "---" };
+      if (score > bestSaved.score) {
+        hiHud.innerHTML = `HI: <strong>${formatPts(score)}</strong> (${playerName})`;
+      } else {
+        hiHud.innerHTML = `HI: <strong>${formatPts(bestSaved.score)}</strong> (${bestSaved.name})`;
+      }
+    }
+
+    function getLevelConfig(lvl) {
+      return {
+        scrollSpeed: 5.4 + (lvl - 1) * 0.32,
+        targetDistance: 1150 + (lvl - 1) * 140,
+        minSpawn: Math.max(24, 62 - (lvl - 1) * 1.8),
+        maxSpawn: Math.max(42, 96 - (lvl - 1) * 2.4),
+        movingPlasmaChance: lvl < 3 ? 0 : Math.min(0.42, 0.12 + (lvl - 3) * 0.018),
+        fullBeamChance: lvl < 5 ? 0 : Math.min(0.26, 0.06 + (lvl - 5) * 0.012)
+      };
+    }
+
+    function setGravity(dir) {
+      if (gravityDir !== dir) {
+        gravityDir = dir;
+        spawnBurst(player.x + player.w / 2, player.y + player.h / 2, dir < 0 ? MINT : PURPLE, 10);
+      }
+    }
+
+    function initLevel(targetLvl) {
+      level = targetLvl;
+      const cfg = getLevelConfig(level);
+      targetDistance = cfg.targetDistance;
+      levelDistance = 0;
+      plasmaFields = [];
+      particles = [];
+      trail = [];
+      spawnTimer = 25;
+      invulnFrames = 35;
+
+      gravityDir = 1;
+      player.x = 130;
+      player.y = FLOOR_Y - player.h;
+      player.vy = 0;
+
+      state = "PLAYING";
+      statusHud.textContent = `SECTOR ${level}`;
+      updateHUD();
+    }
+
+    function startNewGame() {
+      playerName = (playerNameInput.value || "PILOTO").trim().toUpperCase() || "PILOTO";
+      playerNameInput.value = playerName;
+      localStorage.setItem(STORAGE_KEY_NAME, playerName);
+
+      lives = 3;
+      score = 0;
+      rewardPanel.classList.remove("visible");
+      syncHighScore();
+      initLevel(1);
+    }
+
+    function spawnPlasmaField() {
+      const cfg = getLevelConfig(level);
+      const roll = Math.random();
+
+      if (roll < cfg.fullBeamChance) {
+        const gapHeight = Math.max(76, 108 - level * 1.4);
+        const gapTop = CEILING_Y + 26 + Math.random() * (FLOOR_Y - CEILING_Y - gapHeight - 52);
+        const gapBottom = gapTop + gapHeight;
+
+        plasmaFields.push({
+          kind: "split",
+          x: W + 20,
+          w: 18,
+          gapTop,
+          gapBottom,
+          vy: 0
+        });
+      } else if (roll < cfg.fullBeamChance + cfg.movingPlasmaChance) {
+        const h = 44;
+        const y = CEILING_Y + 34 + Math.random() * (FLOOR_Y - CEILING_Y - h - 68);
+        plasmaFields.push({
+          kind: "orb",
+          x: W + 20,
+          y,
+          w: 24,
+          h,
+          baseY: y,
+          amp: 24 + Math.random() * 22,
+          phase: Math.random() * Math.PI * 2
+        });
+      } else {
+        const onCeiling = Math.random() < 0.5;
+        const h = 28 + Math.random() * 20;
+        const w = 26 + Math.random() * 14;
+        plasmaFields.push({
+          kind: "wall",
+          x: W + 20,
+          y: onCeiling ? CEILING_Y : FLOOR_Y - h,
+          w,
+          h,
+          onCeiling
+        });
+      }
+    }
+
+    function spawnBurst(x, y, color, count = 10) {
+      for (let i = 0; i < count; i++) {
+        const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.4;
+        const spd = 1.4 + Math.random() * 3.5;
+        particles.push({
+          x,
+          y,
+          vx: Math.cos(angle) * spd,
+          vy: Math.sin(angle) * spd,
+          size: 2.5 + Math.random() * 2.5,
+          life: 20 + Math.random() * 10,
+          color
+        });
+      }
+    }
+
+    function updateHUD() {
+      lvlHud.textContent = `${level}/${MAX_LEVEL}`;
+      scoreHud.textContent = formatPts(score);
+      livesHud.textContent = lives;
+      const pct = Math.min(100, Math.floor((levelDistance / targetDistance) * 100));
+      const totalPct = (((level - 1) + (state === "WIN" ? 1 : pct / 100)) / MAX_LEVEL) * 100;
+      levelBar.style.width = `${Math.min(100, totalPct)}%`;
+      syncHighScore();
+    }
+
+    function updateCosmos(speedFactor) {
+      for (const st of stars) {
+        st.x -= st.speedX * speedFactor;
+        st.twinkle += 0.05;
+        if (st.x < -4) {
+          st.x = W + 4;
+          st.y = Math.random() * H;
+        }
+      }
+    }
+
+    function rectsOverlap(a, b, pad = 3) {
+      return (
+        a.x + pad < b.x + b.w - pad &&
+        a.x + a.w - pad > b.x + pad &&
+        a.y + pad < b.y + b.h - pad &&
+        a.y + a.h - pad > b.y + pad
+      );
+    }
+
+    function update() {
+      const cfg = getLevelConfig(level);
+      const speedFactor = (state === "PLAYING" && !leaderboardOverlay.classList.contains("open"))
+        ? cfg.scrollSpeed / 5.4
+        : 0.35;
+      updateCosmos(speedFactor);
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life--;
+        if (p.life <= 0) particles.splice(i, 1);
+      }
+
+      if (state !== "PLAYING" || leaderboardOverlay.classList.contains("open")) return;
+
+      if (invulnFrames > 0) invulnFrames--;
+
+      if (keys.left) player.x = Math.max(player.minX, player.x - player.moveSpeed);
+      if (keys.right) player.x = Math.min(player.maxX, player.x + player.moveSpeed);
+
+      player.vy += gravityDir * player.flipAccel;
+      player.vy = Math.max(-player.maxVy, Math.min(player.maxVy, player.vy));
+      player.y += player.vy;
+
+      if (player.y >= FLOOR_Y - player.h) {
+        player.y = FLOOR_Y - player.h;
+        player.vy = 0;
+      } else if (player.y <= CEILING_Y) {
+        player.y = CEILING_Y;
+        player.vy = 0;
+      }
+
+      trail.push({ x: player.x, y: player.y, w: player.w, h: player.h, alpha: 0.35 });
+      if (trail.length > 6) trail.shift();
+      for (const t of trail) t.alpha *= 0.78;
+
+      spawnTimer--;
+      if (spawnTimer <= 0) {
+        spawnPlasmaField();
+        spawnTimer = Math.floor(Math.random() * (cfg.maxSpawn - cfg.minSpawn + 1)) + cfg.minSpawn;
+      }
+
+      for (let i = plasmaFields.length - 1; i >= 0; i--) {
+        const pf = plasmaFields[i];
+        pf.x -= cfg.scrollSpeed;
+
+        let hit = false;
+        if (invulnFrames === 0) {
+          if (pf.kind === "split") {
+            const topBar = { x: pf.x, y: CEILING_Y, w: pf.w, h: pf.gapTop - CEILING_Y };
+            const botBar = { x: pf.x, y: pf.gapBottom, w: pf.w, h: FLOOR_Y - pf.gapBottom };
+            hit = rectsOverlap(player, topBar, 3) || rectsOverlap(player, botBar, 3);
+          } else if (pf.kind === "orb") {
+            pf.phase += 0.06;
+            pf.y = pf.baseY + Math.sin(pf.phase) * pf.amp;
+            hit = rectsOverlap(player, pf, 3);
+          } else {
+            hit = rectsOverlap(player, pf, 3);
+          }
+        }
+
+        if (hit) {
+          lives--;
+          plasmaFields.splice(i, 1);
+          invulnFrames = 65;
+          spawnBurst(player.x + player.w / 2, player.y + player.h / 2, DANGER, 16);
+
+          if (lives <= 0) {
+            lives = 0;
+            state = "GAME_OVER";
+            statusHud.textContent = "GAME OVER";
+            saveRunToTop10(playerName, score, level);
+            updateHUD();
+            return;
+          }
+          updateHUD();
+          continue;
+        }
+
+        if (pf.x + pf.w < -30) {
+          plasmaFields.splice(i, 1);
+          score += 20 * level;
+        }
+      }
+
+      levelDistance += cfg.scrollSpeed;
+      score += cfg.scrollSpeed * 0.25;
+
+      if (levelDistance >= targetDistance) {
+        levelDistance = targetDistance;
+        score += 250 * level;
+        updateHUD();
+
+        if (level >= MAX_LEVEL) {
+          state = "WIN";
+          statusHud.textContent = "20/20 COMPLETADO";
+          saveRunToTop10(playerName, score, MAX_LEVEL);
+          updateHUD();
+          rewardPanel.classList.add("visible");
+        } else {
+          state = "LEVEL_UP";
+          statusHud.textContent = `SECTOR ${level} SUPERADO`;
+        }
+        return;
+      }
+
+      updateHUD();
+    }
+
+    function drawStationCosmos() {
+      ctx.fillStyle = "#05030d";
+      ctx.fillRect(0, 0, W, H);
+
+      const g1 = ctx.createRadialGradient(W * 0.25, H * 0.3, 10, W * 0.25, H * 0.3, 190);
+      g1.addColorStop(0, "rgba(207, 48, 255, 0.12)");
+      g1.addColorStop(1, "rgba(5, 3, 13, 0)");
+      ctx.fillStyle = g1;
+      ctx.fillRect(0, 0, W, H);
+
+      const g2 = ctx.createRadialGradient(W * 0.78, H * 0.7, 10, W * 0.78, H * 0.7, 200);
+      g2.addColorStop(0, "rgba(18, 246, 147, 0.09)");
+      g2.addColorStop(1, "rgba(5, 3, 13, 0)");
+      ctx.fillStyle = g2;
+      ctx.fillRect(0, 0, W, H);
+
+      for (const st of stars) {
+        const alpha = 0.4 + 0.6 * Math.sin(st.twinkle);
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = st.color;
+        ctx.beginPath();
+        ctx.arc(st.x, st.y, st.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      ctx.fillStyle = "rgba(19, 12, 43, 0.88)";
+      ctx.fillRect(0, 0, W, CEILING_Y);
+      ctx.fillRect(0, FLOOR_Y, W, H - FLOOR_Y);
+
+      ctx.save();
+      ctx.strokeStyle = PURPLE;
+      ctx.shadowColor = PURPLE;
+      ctx.shadowBlur = 10;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, CEILING_Y);
+      ctx.lineTo(W, CEILING_Y);
+      ctx.moveTo(0, FLOOR_Y);
+      ctx.lineTo(W, FLOOR_Y);
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.save();
+      ctx.fillStyle = gravityDir < 0 ? MINT : PURPLE;
+      ctx.font = "bold 10px monospace";
+      ctx.fillText(gravityDir < 0 ? "GRAV: ↑ TECHO" : "GRAV: ↓ PISO", 14, 22);
+      ctx.restore();
+    }
+
+    function drawPlasmaFields() {
+      for (const pf of plasmaFields) {
+        ctx.save();
+        ctx.fillStyle = DANGER;
+        ctx.shadowColor = DANGER;
+        ctx.shadowBlur = 12;
+
+        if (pf.kind === "split") {
+          ctx.fillRect(pf.x, CEILING_Y, pf.w, pf.gapTop - CEILING_Y);
+          ctx.fillRect(pf.x, pf.gapBottom, pf.w, FLOOR_Y - pf.gapBottom);
+
+          ctx.fillStyle = "#ff99b3";
+          ctx.fillRect(pf.x + pf.w * 0.35, CEILING_Y, pf.w * 0.3, pf.gapTop - CEILING_Y);
+          ctx.fillRect(pf.x + pf.w * 0.35, pf.gapBottom, pf.w * 0.3, FLOOR_Y - pf.gapBottom);
+        } else if (pf.kind === "orb") {
+          drawRoundedBox(pf.x, pf.y, pf.w, pf.h, 8);
+          ctx.fill();
+          ctx.fillStyle = "#ff99b3";
+          ctx.fillRect(pf.x + 6, pf.y + 6, pf.w - 12, pf.h - 12);
+        } else {
+          ctx.fillRect(pf.x, pf.y, pf.w, pf.h);
+          ctx.fillStyle = "#ff99b3";
+          ctx.fillRect(pf.x + 5, pf.y + 3, pf.w - 10, pf.h - 6);
+        }
+        ctx.restore();
+      }
+    }
+
+    function drawPlayer() {
+      if (state === "START") return;
+      if (invulnFrames > 0 && Math.floor(invulnFrames / 4) % 2 === 0) return;
+
+      for (const t of trail) {
+        ctx.fillStyle = `rgba(18, 246, 147, ${t.alpha * 0.35})`;
+        ctx.fillRect(t.x, t.y, t.w, t.h);
+      }
+
+      ctx.save();
+      ctx.fillStyle = MINT;
+      ctx.shadowColor = MINT;
+      ctx.shadowBlur = 12;
+      drawRoundedBox(player.x, player.y, player.w, player.h, 5);
+      ctx.fill();
+
+      ctx.shadowBlur = 6;
+      ctx.shadowColor = PURPLE;
+      ctx.fillStyle = PURPLE;
+      const visorY = gravityDir < 0 ? player.y + player.h - 13 : player.y + 6;
+      ctx.fillRect(player.x + 7, visorY, 12, 6);
+      ctx.restore();
+    }
+
+    function drawParticles() {
+      for (const p of particles) {
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = Math.max(0, p.life / 30);
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function drawHexLogo(cx, cy, radius) {
+      ctx.save();
+      ctx.translate(cx, cy);
+
+      if (customLogoLoaded && customLogoImg) {
+        const size = radius * 2.1;
+        ctx.drawImage(customLogoImg, -size / 2, -size / 2, size, size);
+        ctx.restore();
+        return;
+      }
+
+      ctx.shadowColor = MINT;
+      ctx.shadowBlur = 16;
+      ctx.fillStyle = MINT;
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i - Math.PI / 6;
+        const px = Math.cos(angle) * radius;
+        const py = Math.sin(angle) * radius;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = "#080514";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = "#06040f";
+      ctx.font = `900 ${Math.round(radius * 0.72)}px ui-monospace, monospace`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("TM", 0, 2);
+      ctx.restore();
+    }
+
+    function drawStartScreen() {
+      const boxX = 34;
+      const boxY = 18;
+      const boxW = W - 68;
+      const boxH = H - 36;
+
+      ctx.save();
+      ctx.fillStyle = "rgba(8, 5, 20, 0.88)";
+      ctx.strokeStyle = "rgba(207, 48, 255, 0.45)";
+      ctx.lineWidth = 1.5;
+      drawRoundedBox(boxX, boxY, boxW, boxH, 12);
+      ctx.fill();
+      ctx.stroke();
+
+      drawHexLogo(W / 2, boxY + 46, 28);
+
+      ctx.textAlign = "center";
+      ctx.fillStyle = MINT;
+      ctx.font = "bold 18px monospace";
+      ctx.fillText("GRAVITY FLIP // ESTACIÓN NEÓN", W / 2, boxY + 92);
+
+      ctx.fillStyle = PURPLE;
+      ctx.font = "bold 11px monospace";
+      ctx.fillText("SUPERÁ LOS 20 SECTORES Y GANÁ 50% OFF", W / 2, boxY + 112);
+
+      const infoX = boxX + 26;
+      const infoY = boxY + 128;
+      const infoW = boxW - 52;
+      const infoH = 192;
+
+      ctx.fillStyle = "rgba(19, 12, 43, 0.9)";
+      ctx.strokeStyle = "rgba(18, 246, 147, 0.25)";
+      ctx.lineWidth = 1;
+      drawRoundedBox(infoX, infoY, infoW, infoH, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.textAlign = "left";
+      ctx.fillStyle = MINT;
+      ctx.font = "bold 12px monospace";
+      ctx.fillText("¿CÓMO FUNCIONA?", infoX + 16, infoY + 22);
+
+      ctx.fillStyle = "#f6f2ff";
+      ctx.font = "11px monospace";
+      ctx.fillText("• No saltás: con [↑] invertís gravedad al TECHO y con [↓] al PISO.", infoX + 16, infoY + 46);
+      ctx.fillText("• Usá [←] y [→] para acomodarte dentro del pasillo.", infoX + 16, infoY + 68);
+      ctx.fillText("• Esquivá los campos de plasma rojos hasta completar el sector.", infoX + 16, infoY + 90);
+
+      ctx.fillStyle = PURPLE;
+      ctx.font = "bold 11px monospace";
+      ctx.fillText("REGLAS DEL DESAFÍO:", infoX + 16, infoY + 118);
+
+      ctx.fillStyle = MINT;
+      ctx.font = "11px monospace";
+      ctx.fillText("• 20 niveles progresivos (más velocidad y patrones de plasma).", infoX + 16, infoY + 140);
+
+      ctx.fillStyle = "#f6f2ff";
+      ctx.fillText("• Tenés 3 vidas y tu puntaje compite en el Top 10 Highscores.", infoX + 16, infoY + 162);
+
+      const pulse = 0.75 + 0.25 * Math.sin(Date.now() * 0.007);
+      ctx.textAlign = "center";
+      ctx.globalAlpha = pulse;
+      ctx.fillStyle = MINT;
+      ctx.font = "bold 13px monospace";
+      ctx.fillText("PRESIONÁ [↑] O [↓] PARA INICIAR", W / 2, boxY + boxH - 18);
+      ctx.restore();
+    }
+
+    function drawOverlay() {
+      if (state === "PLAYING") return;
+
+      if (state === "START") {
+        drawStartScreen();
+        return;
+      }
+
+      ctx.save();
+      ctx.fillStyle = "rgba(5, 3, 13, 0.82)";
+      ctx.fillRect(0, 0, W, H);
+      ctx.textAlign = "center";
+
+      if (state === "LEVEL_UP") {
+        ctx.fillStyle = MINT;
+        ctx.font = "bold 22px monospace";
+        ctx.fillText(`SECTOR ${level} SUPERADO`, W / 2, H / 2 - 18);
+
+        ctx.fillStyle = PURPLE;
+        ctx.font = "13px monospace";
+        ctx.fillText(`Presioná [↑] para el Sector ${level + 1}`, W / 2, H / 2 + 16);
+      } else if (state === "GAME_OVER") {
+        ctx.fillStyle = DANGER;
+        ctx.font = "bold 22px monospace";
+        ctx.fillText(`DESINTEGRADO EN SECTOR ${level}`, W / 2, H / 2 - 22);
+
+        ctx.fillStyle = MINT;
+        ctx.font = "13px monospace";
+        ctx.fillText(`${playerName}: ${formatPts(score)} PTS`, W / 2, H / 2 + 6);
+
+        ctx.fillStyle = PURPLE;
+        ctx.font = "12px monospace";
+        ctx.fillText("Presioná [↑] para reintentar", W / 2, H / 2 + 34);
+      } else if (state === "WIN") {
+        drawHexLogo(W / 2, H / 2 - 64, 28);
+
+        ctx.fillStyle = MINT;
+        ctx.font = "bold 20px monospace";
+        ctx.fillText("¡20 / 20 SECTORES COMPLETADOS!", W / 2, H / 2 - 12);
+
+        ctx.fillStyle = PURPLE;
+        ctx.font = "13px monospace";
+        ctx.fillText(`Puntaje: ${formatPts(score)} — Cupón 50% OFF abajo`, W / 2, H / 2 + 18);
+      }
+
+      ctx.restore();
+    }
+
+    function loop() {
+      update();
+      drawStationCosmos();
+      drawPlasmaFields();
+      drawParticles();
+      drawPlayer();
+      drawOverlay();
+      requestAnimationFrame(loop);
+    }
+
+    openTop10Btn.addEventListener("click", () => {
+      renderLeaderboard();
+      leaderboardOverlay.classList.add("open");
+    });
+
+    closeTop10Btn.addEventListener("click", () => {
+      leaderboardOverlay.classList.remove("open");
+    });
+
+    leaderboardOverlay.addEventListener("click", (e) => {
+      if (e.target === leaderboardOverlay) {
+        leaderboardOverlay.classList.remove("open");
+      }
+    });
+
+    playerNameInput.addEventListener("input", () => {
+      playerName = (playerNameInput.value || "PILOTO").trim().toUpperCase() || "PILOTO";
+      localStorage.setItem(STORAGE_KEY_NAME, playerName);
+    });
+
+    playerNameInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        playerNameInput.blur();
+      }
+      e.stopPropagation();
+    });
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && leaderboardOverlay.classList.contains("open")) {
+        leaderboardOverlay.classList.remove("open");
+        return;
+      }
+
+      if (leaderboardOverlay.classList.contains("open")) return;
+
+      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.code)) {
+        e.preventDefault();
+      }
+
+      if (e.code === "ArrowUp") {
+        keys.up = true;
+        if (state === "START" || state === "GAME_OVER" || state === "WIN") {
+          startNewGame();
+          setGravity(-1);
+        } else if (state === "LEVEL_UP") {
+          initLevel(level + 1);
+        } else if (state === "PLAYING") {
+          setGravity(-1);
+        }
+      } else if (e.code === "ArrowDown") {
+        keys.down = true;
+        if (state === "START" || state === "GAME_OVER" || state === "WIN") {
+          startNewGame();
+          setGravity(1);
+        } else if (state === "PLAYING") {
+          setGravity(1);
+        }
+      } else if (e.code === "ArrowLeft") {
+        keys.left = true;
+      } else if (e.code === "ArrowRight") {
+        keys.right = true;
+      }
+    });
+
+    window.addEventListener("keyup", (e) => {
+      if (e.code === "ArrowUp") keys.up = false;
+      else if (e.code === "ArrowDown") keys.down = false;
+      else if (e.code === "ArrowLeft") keys.left = false;
+      else if (e.code === "ArrowRight") keys.right = false;
+    });
+
+    copyCodeBtn.addEventListener("click", () => {
+      navigator.clipboard?.writeText(PROMO_CODE);
+      copyCodeBtn.textContent = "¡COPIADO!";
+      setTimeout(() => {
+        copyCodeBtn.textContent = "COPIAR";
+      }, 1800);
+    });
+
+    renderLeaderboard();
+    updateHUD();
+    loop();
+  </script>
+</body>
+</html>

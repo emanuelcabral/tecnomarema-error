@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jujuy Contra Skynet // Tecnomarema</title>
+  <style>
+    :root {
+      --bg-cosmos: #05030d;
+      --bg-panel: #0b071a;
+      --bg-card: #130c2b;
+      --marema-mint: #12f693;
+      --marema-purple: #cf30ff;
+      --marema-mint-soft: rgba(18, 246, 147, 0.14);
+      --marema-purple-soft: rgba(207, 48, 255, 0.16);
+      --text-main: #f6f2ff;
+      --text-muted: #a699cc;
+      --danger: #ff3366;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      max-height: 100vh;
+      overflow: hidden;
+    }
+
+    body {
+      background:
+        radial-gradient(circle at 20% 15%, rgba(207, 48, 255, 0.18), transparent 45%),
+        radial-gradient(circle at 85% 80%, rgba(18, 246, 147, 0.14), transparent 45%),
+        var(--bg-cosmos);
+      color: var(--text-main);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      height: 100dvh;
+      max-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+    }
+
+    .game-shell {
+      position: relative;
+      width: 100%;
+      max-width: 680px;
+      height: 100%;
+      max-height: calc(100vh - 20px);
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-panel);
+      border: 1px solid rgba(207, 48, 255, 0.38);
+      border-radius: 12px;
+      box-shadow:
+        0 18px 45px rgba(0, 0, 0, 0.72),
+        0 0 26px rgba(207, 48, 255, 0.16),
+        0 0 18px rgba(18, 246, 147, 0.08);
+      overflow: hidden;
+    }
+
+    .top-hud {
+      flex-shrink: 0;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--bg-card);
+      border-bottom: 1px solid rgba(207, 48, 255, 0.24);
+      font-size: 11px;
+    }
+
+    .brand-link {
+      color: var(--marema-mint);
+      text-decoration: none;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+    }
+
+    .brand-link:hover {
+      color: var(--marema-purple);
+    }
+
+    .brand-link span {
+      color: var(--marema-purple);
+    }
+
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .stats strong {
+      color: var(--marema-mint);
+    }
+
+    .location-banner {
+      flex-shrink: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 12px;
+      background: #0b061d;
+      border-bottom: 1px solid rgba(207, 48, 255, 0.25);
+      font-size: 11px;
+    }
+
+    .location-title {
+      color: var(--marema-mint);
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .location-sub {
+      color: var(--marema-purple);
+      font-size: 10px;
+      white-space: nowrap;
+    }
+
+    .player-bar {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 12px;
+      background: #080514;
+      border-bottom: 1px solid rgba(18, 246, 147, 0.14);
+      font-size: 11px;
+    }
+
+    .player-input-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .player-input-group label {
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .player-input {
+      background: var(--bg-card);
+      border: 1px solid rgba(207, 48, 255, 0.42);
+      border-radius: 5px;
+      color: var(--marema-mint);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 7px;
+      width: 100%;
+      max-width: 135px;
+      outline: none;
+    }
+
+    .player-input:focus {
+      border-color: var(--marema-mint);
+    }
+
+    .hi-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .hi-badge {
+      color: var(--marema-purple);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .hi-badge strong {
+      color: var(--marema-mint);
+    }
+
+    .top10-btn {
+      background: var(--marema-purple-soft);
+      border: 1px solid rgba(207, 48, 255, 0.55);
+      color: var(--marema-mint);
+      border-radius: 5px;
+      padding: 3px 8px;
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .top10-btn:hover {
+      background: rgba(18, 246, 147, 0.18);
+      border-color: var(--marema-mint);
+    }
+
+    .level-bar-wrap {
+      flex-shrink: 0;
+      height: 4px;
+      background: #05030d;
+      width: 100%;
+    }
+
+    .level-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--marema-purple), var(--marema-mint));
+      transition: width 0.2s ease;
+    }
+
+    .canvas-stage {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      background: var(--bg-cosmos);
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: pointer;
+    }
+
+    /* Modal Top 10 Highscores */
+    .leaderboard-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(5, 3, 13, 0.88);
+      backdrop-filter: blur(3px);
+      z-index: 20;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .leaderboard-overlay.open {
+      display: flex;
+    }
+
+    .leaderboard-card {
+      width: 100%;
+      max-width: 410px;
+      background: #0e0921;
+      border: 1px solid rgba(207, 48, 255, 0.55);
+      border-radius: 10px;
+      box-shadow: 0 0 28px rgba(207, 48, 255, 0.25);
+      padding: 14px 16px;
+    }
+
+    .leaderboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(18, 246, 147, 0.22);
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+    }
+
+    .leaderboard-header h3 {
+      color: var(--marema-mint);
+      font-size: 13px;
+      letter-spacing: 0.6px;
+    }
+
+    .close-lb-btn {
+      background: transparent;
+      border: 1px solid rgba(207, 48, 255, 0.5);
+      color: var(--marema-purple);
+      border-radius: 4px;
+      padding: 2px 7px;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .close-lb-btn:hover {
+      border-color: var(--marema-mint);
+      color: var(--marema-mint);
+    }
+
+    .lb-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+
+    .lb-table th {
+      text-align: left;
+      color: var(--marema-purple);
+      padding: 4px 6px;
+      border-bottom: 1px solid rgba(207, 48, 255, 0.2);
+      font-weight: 700;
+    }
+
+    .lb-table td {
+      padding: 5px 6px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+    }
+
+    .lb-table tr:first-child td {
+      color: var(--marema-mint);
+      font-weight: 700;
+    }
+
+    .lb-table td.pts-col,
+    .lb-table th.pts-col {
+      text-align: right;
+    }
+
+    .lb-empty {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 18px 8px;
+      font-size: 11px;
+    }
+
+    .reward-panel {
+      display: none;
+      flex-shrink: 0;
+      padding: 9px 14px;
+      background: #100926;
+      border-top: 1px solid rgba(18, 246, 147, 0.4);
+      text-align: center;
+    }
+
+    .reward-panel.visible {
+      display: block;
+    }
+
+    .reward-panel h2 {
+      color: var(--marema-mint);
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .coupon-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--marema-mint-soft);
+      border: 1px dashed var(--marema-mint);
+      padding: 4px 10px;
+      border-radius: 6px;
+      margin-top: 3px;
+    }
+
+    .coupon-code {
+      color: var(--marema-mint);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .copy-btn {
+      background: var(--marema-mint);
+      color: #05030d;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 9px;
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .footer-bar {
+      flex-shrink: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      background: #070412;
+      border-top: 1px solid rgba(207, 48, 255, 0.16);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .keycap {
+      display: inline-block;
+      padding: 1px 5px;
+      border-radius: 4px;
+      border: 1px solid rgba(18, 246, 147, 0.45);
+      background: rgba(18, 246, 147, 0.12);
+      color: var(--marema-mint);
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-shell">
+    <div class="top-hud">
+      <a class="brand-link" href="https://tecnomarema.com.ar/" target="_blank" rel="noopener noreferrer">
+        TECNOMAREMA<span>.COM.AR</span>
+      </a>
+      <div class="stats">
+        <div>LVL: <strong id="lvlHud">1/20</strong></div>
+        <div>BOTS: <strong id="botsHud">0/0</strong></div>
+        <div>PTS: <strong id="scoreHud">00000</strong></div>
+        <div>VIDAS: <strong id="livesHud">3</strong></div>
+      </div>
+    </div>
+
+    <div class="location-banner">
+      <div class="location-title" id="locationTitle">01 · CERRO DE LOS 7 COLORES — PURMAMARCA</div>
+      <div class="location-sub" id="locationSub">IMG/IMG1.JPG</div>
+    </div>
+
+    <div class="player-bar">
+      <div class="player-input-group">
+        <label for="playerNameInput">JUGADOR:</label>
+        <input
+          id="playerNameInput"
+          class="player-input"
+          type="text"
+          maxlength="14"
+          placeholder="Tu nombre"
+          autocomplete="off"
+        />
+      </div>
+      <div class="hi-controls">
+        <div class="hi-badge" id="hiHud">HI: <strong>00000</strong> (---)</div>
+        <button id="openTop10Btn" class="top10-btn" type="button">★ TOP 10</button>
+      </div>
+    </div>
+
+    <div class="level-bar-wrap">
+      <div class="level-bar-fill" id="levelBar"></div>
+    </div>
+
+    <div class="canvas-stage">
+      <canvas id="gameCanvas" width="680" height="480"></canvas>
+
+      <!-- Modal Ranking Top 10 -->
+      <div class="leaderboard-overlay" id="leaderboardOverlay">
+        <div class="leaderboard-card">
+          <div class="leaderboard-header">
+            <h3>★ TOP 10 HIGHSCORES // MAREMA</h3>
+            <button id="closeTop10Btn" class="close-lb-btn" type="button">CERRAR [ESC]</button>
+          </div>
+          <div id="leaderboardBody"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="reward-panel" id="rewardPanel">
+      <h2>¡20/20 SECTORES DE JUJUY LIBERADOS! TU 50% OFF ESTÁ LISTO</h2>
+      <div class="coupon-row">
+        <span class="coupon-code" id="promoCodeText">MAREMA50-JUJUY</span>
+        <button class="copy-btn" id="copyCodeBtn" type="button">COPIAR</button>
+      </div>
+    </div>
+
+    <div class="footer-bar">
+      <div>
+        <span class="keycap">←</span> <span class="keycap">→</span> Avanzar &nbsp;
+        <span class="keycap">↑</span> Saltar &nbsp;
+        <span class="keycap">ESPACIO</span> Disparar Talco
+      </div>
+      <div id="statusHud">INICIO</div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const lvlHud = document.getElementById("lvlHud");
+    const botsHud = document.getElementById("botsHud");
+    const scoreHud = document.getElementById("scoreHud");
+    const livesHud = document.getElementById("livesHud");
+    const locationTitle = document.getElementById("locationTitle");
+    const locationSub = document.getElementById("locationSub");
+    const levelBar = document.getElementById("levelBar");
+    const statusHud = document.getElementById("statusHud");
+    const rewardPanel = document.getElementById("rewardPanel");
+    const promoCodeText = document.getElementById("promoCodeText");
+    const copyCodeBtn = document.getElementById("copyCodeBtn");
+    const playerNameInput = document.getElementById("playerNameInput");
+    const hiHud = document.getElementById("hiHud");
+
+    const openTop10Btn = document.getElementById("openTop10Btn");
+    const closeTop10Btn = document.getElementById("closeTop10Btn");
+    const leaderboardOverlay = document.getElementById("leaderboardOverlay");
+    const leaderboardBody = document.getElementById("leaderboardBody");
+
+    const PROMO_CODE = "MAREMA50-JUJUY";
+    const CUSTOM_LOGO_URL = "";
+    const STORAGE_KEY_TOP10 = "tecnomarema_jujuy_skynet_top10_v1";
+    const STORAGE_KEY_NAME = "tecnomarema_jujuy_skynet_player_v1";
+
+    const MAX_LEVEL = 20;
+    const W = canvas.width;
+    const H = canvas.height;
+    const GROUND_Y = 402;
+
+    const MINT = "#12f693";
+    const PURPLE = "#cf30ff";
+    const DANGER = "#ff3366";
+
+    // Los 20 niveles con su imagen correspondiente img/img1.jpg .. img/img20.jpg
+    const JUJUY_LEVELS = [
+      { id: 1, name: "CERRO DE LOS 7 COLORES — PURMAMARCA", img: "img/img1.jpg" },
+      { id: 2, name: "TREN SOLAR DE LA QUEBRADA", img: "img/img2.jpg" },
+      { id: 3, name: "CARNAVAL DE IRUYA · BAJADA DE LOS DIABLOS", img: "img/img3.jpg" },
+      { id: 4, name: "PUCARÁ DE TILCARA — PIRÁMIDES DE PIEDRA", img: "img/img4.jpg" },
+      { id: 5, name: "QUEBRADA DE HUMAHUACA · 14 COLORES", img: "img/img5.jpg" },
+      { id: 6, name: "PARQUE NACIONAL CALILEGUA", img: "img/img6.jpg" },
+      { id: 7, name: "SALINAS GRANDES DE JUJUY", img: "img/img7.jpg" },
+      { id: 8, name: "DIQUE LA CIÉNAGA", img: "img/img8.jpg" },
+      { id: 9, name: "CABILDO HISTÓRICO DE JUJUY", img: "img/img9.jpg" },
+      { id: 10, name: "PARQUE XIBI XIBI", img: "img/img10.jpg" },
+      { id: 11, name: "PAREDONES DE YALA", img: "img/img11.jpg" },
+      { id: 12, name: "LAGUNA DE YALA", img: "img/img12.jpg" },
+      { id: 13, name: "TOROS DE CASABINDO", img: "img/img13.jpg" },
+      { id: 14, name: "FIESTA NACIONAL DE LOS ESTUDIANTES", img: "img/img14.jpg" },
+      { id: 15, name: "TERMAS DEL JORDÁN", img: "img/img15.jpg" },
+      { id: 16, name: "RÍO BLANCO Y PAYPAYA — VIRGEN", img: "img/img16.jpg" },
+      { id: 17, name: "FESTIVAL DE LOS TEKIS — CIUDAD CULTURAL", img: "img/img17.jpg" },
+      { id: 18, name: "PLAZA BELGRANO Y CASA DE GOBIERNO", img: "img/img18.jpg" },
+      { id: 19, name: "HOTEL TERMAS DE REYES — NIEVE", img: "img/img19.jpg" },
+      { id: 20, name: "FESTIVAL DE LAS OLLAS — LA QUIACA", img: "img/img20.jpg" }
+    ];
+
+    // Precarga de img/img1.jpg a img/img20.jpg con estado de carga por imagen
+    const levelImages = JUJUY_LEVELS.map((lvl) => {
+      const img = new Image();
+      const entry = { img, loaded: false };
+      img.onload = () => {
+        entry.loaded = true;
+      };
+      img.onerror = () => {
+        entry.loaded = false;
+      };
+      img.src = lvl.img;
+      return entry;
+    });
+
+    promoCodeText.textContent = PROMO_CODE;
+
+    let customLogoImg = null;
+    let customLogoLoaded = false;
+    if (CUSTOM_LOGO_URL) {
+      customLogoImg = new Image();
+      customLogoImg.onload = () => {
+        customLogoLoaded = true;
+      };
+      customLogoImg.src = CUSTOM_LOGO_URL;
+    }
+
+    let playerName = (localStorage.getItem(STORAGE_KEY_NAME) || "PILOTO").trim().toUpperCase() || "PILOTO";
+    playerNameInput.value = playerName;
+
+    function loadTop10() {
+      try {
+        const list = JSON.parse(localStorage.getItem(STORAGE_KEY_TOP10));
+        if (Array.isArray(list)) {
+          return list
+            .filter((item) => item && typeof item.score === "number")
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 10);
+        }
+      } catch (_) {}
+      return [];
+    }
+
+    let top10List = loadTop10();
+
+    function saveRunToTop10(name, finalScore, reachedLevel) {
+      const cleanScore = Math.floor(finalScore);
+      if (cleanScore <= 0) return;
+
+      top10List.push({
+        name: name || "PILOTO",
+        score: cleanScore,
+        level: reachedLevel
+      });
+
+      top10List.sort((a, b) => b.score - a.score);
+      top10List = top10List.slice(0, 10);
+      localStorage.setItem(STORAGE_KEY_TOP10, JSON.stringify(top10List));
+      renderLeaderboard();
+    }
+
+    function renderLeaderboard() {
+      if (top10List.length === 0) {
+        leaderboardBody.innerHTML = `<div class="lb-empty">Todavía no hay puntajes registrados.<br>¡Jugá una partida para entrar al Top 10!</div>`;
+        return;
+      }
+
+      const rowsHtml = top10List
+        .map(
+          (entry, idx) => `
+          <tr>
+            <td>#${idx + 1}</td>
+            <td>${entry.name}</td>
+            <td>LVL ${entry.level}</td>
+            <td class="pts-col">${formatPts(entry.score)}</td>
+          </tr>
+        `
+        )
+        .join("");
+
+      leaderboardBody.innerHTML = `
+        <table class="lb-table">
+          <thead>
+            <tr>
+              <th>POS</th>
+              <th>JUGADOR</th>
+              <th>NIVEL</th>
+              <th class="pts-col">PUNTOS</th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      `;
+    }
+
+    const keys = { left: false, right: false, up: false, fire: false };
+
+    // Estados: "START" | "PLAYING" | "LEVEL_UP" | "GAME_OVER" | "WIN"
+    let state = "START";
+    let level = 1;
+    let lives = 300;
+    let score = 0;
+    let invulnFrames = 0;
+    let fireCooldown = 0;
+    let botAnimClock = 0;
+
+    let enemies = [];
+    let talcoShots = [];
+    let enemyShots = [];
+    let particles = [];
+    let totalBotsInLevel = 0;
+    let defeatedBotsInLevel = 0;
+
+    const player = {
+      x: 78,
+      y: GROUND_Y - 34,
+      w: 24,
+      h: 34,
+      vx: 0,
+      vy: 0,
+      facing: 1,
+      moveSpeed: 3.9,
+      gravity: 0.48,
+      jumpVy: -10.5,
+      onGround: true,
+      walkCycle: 0
+    };
+
+    function drawRoundedBox(x, y, w, h, r) {
+      const radius = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.arcTo(x + w, y, x + w, y + h, radius);
+      ctx.arcTo(x + w, y + h, x, y + h, radius);
+      ctx.arcTo(x, y + h, x, y, radius);
+      ctx.arcTo(x, y, x + w, y, radius);
+      ctx.closePath();
+    }
+
+    function formatPts(val) {
+      return String(Math.floor(val)).padStart(5, "0");
+    }
+
+    function syncHighScore() {
+      const bestSaved = top10List.length > 0 ? top10List[0] : { score: 0, name: "---" };
+      if (score > bestSaved.score) {
+        hiHud.innerHTML = `HI: <strong>${formatPts(score)}</strong> (${playerName})`;
+      } else {
+        hiHud.innerHTML = `HI: <strong>${formatPts(bestSaved.score)}</strong> (${bestSaved.name})`;
+      }
+    }
+
+    function spawnBurst(x, y, color, count = 12) {
+      for (let i = 0; i < count; i++) {
+        const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.4;
+        const spd = 1.4 + Math.random() * 3.4;
+        particles.push({
+          x,
+          y,
+          vx: Math.cos(angle) * spd,
+          vy: Math.sin(angle) * spd,
+          size: 2.5 + Math.random() * 2.5,
+          life: 20 + Math.random() * 10,
+          color
+        });
+      }
+    }
+
+    function resetPlayer() {
+      player.x = 78;
+      player.y = GROUND_Y - player.h;
+      player.vx = 0;
+      player.vy = 0;
+      player.facing = 1;
+      player.onGround = true;
+      invulnFrames = 60;
+    }
+
+    function initLevel(targetLvl) {
+      level = targetLvl;
+      const lvlInfo = JUJUY_LEVELS[level - 1];
+      locationTitle.textContent = `${String(level).padStart(2, "0")} · ${lvlInfo.name}`;
+      locationSub.textContent = lvlInfo.img.toUpperCase();
+
+      talcoShots = [];
+      enemyShots = [];
+      particles = [];
+      enemies = [];
+      fireCooldown = 0;
+      resetPlayer();
+
+      const botCount = Math.min(8, 3 + Math.floor((level - 1) * 0.3));
+      const hpPerBot = level >= 12 ? 3 : level >= 5 ? 2 : 1;
+      const moveSpeed = Math.min(2.1, 0.8 + (level - 1) * 0.06);
+      const shootInterval = Math.max(62, 128 - (level - 1) * 3.1);
+
+      for (let i = 0; i < botCount; i++) {
+        const minX = 240 + (i % 3) * 110;
+        const maxX = Math.min(W - 42, minX + 145);
+        enemies.push({
+          x: Math.min(W - 56, minX + ((i * 37) % 90)),
+          y: GROUND_Y - 34,
+          w: 26,
+          h: 34,
+          minX,
+          maxX,
+          vx: (i % 2 === 0 ? 1 : -1) * moveSpeed,
+          hp: hpPerBot,
+          alive: true,
+          shootTimer: 38 + i * 26,
+          shootInterval,
+          stride: i * 1.4
+        });
+      }
+
+      totalBotsInLevel = enemies.length;
+      defeatedBotsInLevel = 0;
+
+      state = "PLAYING";
+      statusHud.textContent = `LVL ${level}`;
+      updateHUD();
+    }
+
+    function startNewGame() {
+      playerName = (playerNameInput.value || "PILOTO").trim().toUpperCase() || "PILOTO";
+      playerNameInput.value = playerName;
+      localStorage.setItem(STORAGE_KEY_NAME, playerName);
+
+      lives = 300;
+      score = 0;
+      rewardPanel.classList.remove("visible");
+      syncHighScore();
+      initLevel(1);
+    }
+
+    function shootTalco() {
+      if (state !== "PLAYING" || leaderboardOverlay.classList.contains("open")) return;
+      if (fireCooldown > 0) return;
+
+      fireCooldown = 11;
+      const startX = player.facing === 1 ? player.x + player.w + 3 : player.x - 11;
+      const startY = player.y + 15;
+
+      talcoShots.push({
+        x: startX,
+        y: startY,
+        r: 6.5,
+        vx: player.facing * 8.8,
+        vy: -0.35,
+        life: 62
+      });
+    }
+
+    function damagePlayer() {
+      if (invulnFrames > 0) return;
+      lives--;
+      spawnBurst(player.x + player.w / 2, player.y + player.h / 2, DANGER, 18);
+
+      if (lives <= 0) {
+        lives = 0;
+        state = "GAME_OVER";
+        statusHud.textContent = "GAME OVER";
+        saveRunToTop10(playerName, score, level);
+        updateHUD();
+        return;
+      }
+
+      resetPlayer();
+      updateHUD();
+    }
+
+    function updateHUD() {
+      lvlHud.textContent = `${level}/${MAX_LEVEL}`;
+      botsHud.textContent = `${defeatedBotsInLevel}/${totalBotsInLevel}`;
+      scoreHud.textContent = formatPts(score);
+      livesHud.textContent = lives;
+
+      const botPct = totalBotsInLevel > 0 ? defeatedBotsInLevel / totalBotsInLevel : 0;
+      const totalPct = (((level - 1) + (state === "WIN" ? 1 : botPct)) / MAX_LEVEL) * 100;
+      levelBar.style.width = `${Math.min(100, totalPct)}%`;
+      syncHighScore();
+    }
+
+    function rectsOverlap(a, b) {
+      return (
+        a.x < b.x + b.w &&
+        a.x + a.w > b.x &&
+        a.y < b.y + b.h &&
+        a.y + a.h > b.y
+      );
+    }
+
+    function update() {
+      botAnimClock += 0.16;
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life--;
+        if (p.life <= 0) particles.splice(i, 1);
+      }
+
+      if (state !== "PLAYING" || leaderboardOverlay.classList.contains("open")) return;
+
+      if (invulnFrames > 0) invulnFrames--;
+      if (fireCooldown > 0) fireCooldown--;
+
+      if (keys.fire) {
+        shootTalco();
+      }
+
+      if (keys.left && !keys.right) {
+        player.vx = -player.moveSpeed;
+        player.facing = -1;
+        player.walkCycle += 0.25;
+      } else if (keys.right && !keys.left) {
+        player.vx = player.moveSpeed;
+        player.facing = 1;
+        player.walkCycle += 0.25;
+      } else {
+        player.vx *= 0.72;
+      }
+
+      player.x = Math.max(18, Math.min(W - player.w - 18, player.x + player.vx));
+
+      if (keys.up && player.onGround) {
+        player.vy = player.jumpVy;
+        player.onGround = false;
+        spawnBurst(player.x + player.w / 2, player.y + player.h, "#ffffff", 7);
+      }
+
+      player.vy = Math.min(13, player.vy + player.gravity);
+      player.y += player.vy;
+      if (player.y >= GROUND_Y - player.h) {
+        player.y = GROUND_Y - player.h;
+        player.vy = 0;
+        player.onGround = true;
+      }
+
+      // Disparos de talco
+      for (let i = talcoShots.length - 1; i >= 0; i--) {
+        const t = talcoShots[i];
+        t.x += t.vx;
+        t.y += t.vy;
+        t.r += 0.14;
+        t.life--;
+
+        if (t.life <= 0 || t.x < -20 || t.x > W + 20) {
+          talcoShots.splice(i, 1);
+          continue;
+        }
+
+        const hitBox = { x: t.x - t.r, y: t.y - t.r, w: t.r * 2, h: t.r * 2 };
+        let hitBot = false;
+
+        for (const enemy of enemies) {
+          if (!enemy.alive) continue;
+          if (rectsOverlap(hitBox, enemy)) {
+            hitBot = true;
+            enemy.hp--;
+            spawnBurst(t.x, t.y, "#ffffff", 8);
+
+            if (enemy.hp <= 0) {
+              enemy.alive = false;
+              defeatedBotsInLevel++;
+              score += 120 * level;
+              spawnBurst(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, DANGER, 16);
+              updateHUD();
+            } else {
+              score += 25;
+              updateHUD();
+            }
+            break;
+          }
+        }
+
+        if (hitBot) {
+          talcoShots.splice(i, 1);
+        }
+      }
+
+      // Robots asesinos Skynet
+      for (const enemy of enemies) {
+        if (!enemy.alive) continue;
+
+        enemy.x += enemy.vx;
+        enemy.stride += 0.18;
+        if (enemy.x <= enemy.minX) {
+          enemy.x = enemy.minX;
+          enemy.vx = Math.abs(enemy.vx);
+        } else if (enemy.x + enemy.w >= enemy.maxX) {
+          enemy.x = enemy.maxX - enemy.w;
+          enemy.vx = -Math.abs(enemy.vx);
+        }
+
+        enemy.shootTimer--;
+        if (enemy.shootTimer <= 0) {
+          enemy.shootTimer = enemy.shootInterval;
+          const dir = player.x + player.w / 2 >= enemy.x + enemy.w / 2 ? 1 : -1;
+          enemyShots.push({
+            x: dir === 1 ? enemy.x + enemy.w + 3 : enemy.x - 11,
+            y: enemy.y + 16,
+            w: 10,
+            h: 4,
+            vx: dir * (4.3 + Math.min(2.5, level * 0.1))
+          });
+        }
+
+        if (rectsOverlap(player, enemy)) {
+          damagePlayer();
+          if (state !== "PLAYING") return;
+        }
+      }
+
+      // Tiros enemigos
+      for (let i = enemyShots.length - 1; i >= 0; i--) {
+        const es = enemyShots[i];
+        es.x += es.vx;
+        if (es.x < -15 || es.x > W + 15) {
+          enemyShots.splice(i, 1);
+          continue;
+        }
+
+        if (rectsOverlap(es, player)) {
+          enemyShots.splice(i, 1);
+          damagePlayer();
+          if (state !== "PLAYING") return;
+        }
+      }
+
+      if (defeatedBotsInLevel >= totalBotsInLevel && totalBotsInLevel > 0) {
+        score += 220 * level;
+        updateHUD();
+
+        if (level >= MAX_LEVEL) {
+          state = "WIN";
+          statusHud.textContent = "20/20 COMPLETADO";
+          saveRunToTop10(playerName, score, MAX_LEVEL);
+          updateHUD();
+          rewardPanel.classList.add("visible");
+        } else {
+          state = "LEVEL_UP";
+          statusHud.textContent = `LVL ${level} SUPERADO`;
+        }
+        return;
+      }
+
+      updateHUD();
+    }
+
+    // Dibuja la foto real img/imgX.jpg en cover sobre el escenario y una franja de suelo para caminar
+    function drawStageBackground(lvl) {
+      const media = levelImages[lvl - 1];
+
+      ctx.fillStyle = "#05030d";
+      ctx.fillRect(0, 0, W, H);
+
+      if (media && media.loaded && media.img.naturalWidth > 0) {
+        const imgW = media.img.naturalWidth;
+        const imgH = media.img.naturalHeight;
+        const scale = Math.max(W / imgW, GROUND_Y / imgH);
+        const drawW = imgW * scale;
+        const drawH = imgH * scale;
+        const dx = (W - drawW) / 2;
+        const dy = (GROUND_Y - drawH) / 2;
+        ctx.drawImage(media.img, dx, dy, drawW, drawH);
+      } else {
+        // Respaldo visual si todavía no existe o no cargó img/imgX.jpg
+        const g = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
+        g.addColorStop(0, "#120926");
+        g.addColorStop(1, "#261247");
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, W, GROUND_Y);
+
+        ctx.fillStyle = "rgba(246, 242, 255, 0.72)";
+        ctx.font = "11px monospace";
+        ctx.textAlign = "center";
+        ctx.fillText(`COLOCÁ TU FOTO EN: ${JUJUY_LEVELS[lvl - 1].img}`, W / 2, 185);
+      }
+
+      // Franja de piso / sendero inferior para los personajes
+      ctx.fillStyle = "rgba(7, 4, 18, 0.86)";
+      ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y);
+
+      ctx.strokeStyle = MINT;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, GROUND_Y);
+      ctx.lineTo(W, GROUND_Y);
+      ctx.stroke();
+    }
+
+    // Personaje bien jujeño: gorrito andino, poncho con guardas y ojotas/chanclas
+    function drawJujenoCharacter() {
+      if (state === "START") return;
+      if (invulnFrames > 0 && Math.floor(invulnFrames / 4) % 2 === 0) return;
+
+      const walkOffset = player.onGround ? Math.sin(player.walkCycle) * 2.5 : 0;
+      const cx = player.x + player.w / 2;
+
+      ctx.save();
+
+      // Piernas y ojotas/chanclas
+      ctx.fillStyle = "#8d5524";
+      ctx.fillRect(cx - 7, player.y + 23 + walkOffset * 0.4, 5, 8);
+      ctx.fillRect(cx + 2, player.y + 23 - walkOffset * 0.4, 5, 8);
+
+      ctx.fillStyle = MINT;
+      ctx.fillRect(cx - 8, player.y + 30 + walkOffset * 0.4, 7, 3.5);
+      ctx.fillRect(cx + 1, player.y + 30 - walkOffset * 0.4, 7, 3.5);
+
+      // Poncho jujeño
+      ctx.fillStyle = "#b8293d";
+      ctx.beginPath();
+      ctx.moveTo(cx - 4, player.y + 10);
+      ctx.lineTo(cx + 4, player.y + 10);
+      ctx.lineTo(player.x + player.w + 2, player.y + 25);
+      ctx.lineTo(player.x - 2, player.y + 25);
+      ctx.closePath();
+      ctx.fill();
+
+      // Guarda andina del poncho
+      ctx.fillStyle = MINT;
+      ctx.fillRect(player.x + 1, player.y + 20, player.w - 2, 3);
+      ctx.fillStyle = PURPLE;
+      ctx.fillRect(player.x + 3, player.y + 16, player.w - 6, 2.5);
+
+      // Cabeza
+      ctx.fillStyle = "#d99b66";
+      ctx.beginPath();
+      ctx.arc(cx, player.y + 7, 6.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Ojos
+      ctx.fillStyle = "#080514";
+      const eyeX = player.facing === 1 ? cx + 2 : cx - 4;
+      ctx.fillRect(eyeX, player.y + 6, 2, 2.5);
+
+      // Gorrito jujeño (chullo con orejeras y franjas)
+      ctx.fillStyle = PURPLE;
+      ctx.beginPath();
+      ctx.arc(cx, player.y + 5, 7, Math.PI, 0);
+      ctx.fill();
+      ctx.fillStyle = MINT;
+      ctx.fillRect(cx - 7, player.y + 2, 14, 2.5);
+      ctx.fillStyle = PURPLE;
+      ctx.fillRect(cx - 7.5, player.y + 4, 3, 7);
+      ctx.fillRect(cx + 4.5, player.y + 4, 3, 7);
+
+      // Bolsita/lanza de talco
+      ctx.fillStyle = "#ffffff";
+      const pouchX = player.facing === 1 ? player.x + player.w - 1 : player.x - 6;
+      ctx.beginPath();
+      ctx.arc(pouchX + 3, player.y + 16, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    // Robot calavera estilo Skynet bien detallado (piernas metálicas, torso blindado, cuello, cráneo y ojos rojos)
+    function drawSkynetTerminatorRobot(enemy) {
+      const cx = enemy.x + enemy.w / 2;
+      const step = Math.sin(enemy.stride) * 2.5;
+      const dir = enemy.vx >= 0 ? 1 : -1;
+
+      ctx.save();
+      ctx.shadowColor = DANGER;
+      ctx.shadowBlur = 10;
+
+      // Piernas mecánicas articuladas
+      ctx.strokeStyle = "#b8c0d4";
+      ctx.lineWidth = 2.6;
+      ctx.beginPath();
+      ctx.moveTo(cx - 4, enemy.y + 23);
+      ctx.lineTo(cx - 5 - step, enemy.y + 33);
+      ctx.moveTo(cx + 4, enemy.y + 23);
+      ctx.lineTo(cx + 5 + step, enemy.y + 33);
+      ctx.stroke();
+
+      // Torso blindado con núcleo rojo/púrpura
+      ctx.fillStyle = "#2b3040";
+      ctx.strokeStyle = PURPLE;
+      ctx.lineWidth = 1.4;
+      drawRoundedBox(enemy.x + 5, enemy.y + 13, enemy.w - 10, 11, 3);
+      ctx.fill();
+      ctx.stroke();
+
+      // Reactor / núcleo del pecho
+      ctx.fillStyle = DANGER;
+      ctx.fillRect(cx - 2, enemy.y + 16, 4, 4);
+
+      // Hombreras y brazo con cañón láser
+      ctx.fillStyle = "#3c4359";
+      ctx.fillRect(enemy.x + 2, enemy.y + 13, 4, 5);
+      ctx.fillRect(enemy.x + enemy.w - 6, enemy.y + 13, 4, 5);
+
+      ctx.fillStyle = "#7d87a1";
+      const armX = dir === 1 ? enemy.x + enemy.w - 2 : enemy.x - 6;
+      ctx.fillRect(armX, enemy.y + 16, 8, 3);
+
+      // Cuello metálico
+      ctx.fillStyle = "#8f99b3";
+      ctx.fillRect(cx - 2.5, enemy.y + 10, 5, 4);
+
+      // Cráneo robótico estilo Skynet
+      ctx.fillStyle = "#cfd6e6";
+      ctx.strokeStyle = "#141021";
+      ctx.lineWidth = 1.2;
+      drawRoundedBox(enemy.x + 5, enemy.y + 1, enemy.w - 10, 10, 4);
+      ctx.fill();
+      ctx.stroke();
+
+      // Ojos rojos brillantes
+      ctx.fillStyle = DANGER;
+      ctx.fillRect(cx - 4.5, enemy.y + 4, 3.2, 2.8);
+      ctx.fillRect(cx + 1.3, enemy.y + 4, 3.2, 2.8);
+
+      ctx.restore();
+    }
+
+    function drawShotsAndParticles() {
+      // Nubes de talco disparadas por el personaje
+      for (const t of talcoShots) {
+        ctx.save();
+        ctx.fillStyle = "#ffffff";
+        ctx.shadowColor = MINT;
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, t.r, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "rgba(18, 246, 147, 0.45)";
+        ctx.beginPath();
+        ctx.arc(t.x - t.vx * 0.7, t.y + 1, t.r * 0.7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // Tiros rojos de los robots Skynet
+      for (const es of enemyShots) {
+        ctx.save();
+        ctx.fillStyle = DANGER;
+        ctx.shadowColor = DANGER;
+        ctx.shadowBlur = 10;
+        ctx.fillRect(es.x, es.y, es.w, es.h);
+        ctx.restore();
+      }
+
+      for (const p of particles) {
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = Math.max(0, p.life / 30);
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function drawHexLogo(cx, cy, radius) {
+      ctx.save();
+      ctx.translate(cx, cy);
+
+      if (customLogoLoaded && customLogoImg) {
+        const size = radius * 2.1;
+        ctx.drawImage(customLogoImg, -size / 2, -size / 2, size, size);
+        ctx.restore();
+        return;
+      }
+
+      ctx.shadowColor = MINT;
+      ctx.shadowBlur = 16;
+      ctx.fillStyle = MINT;
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i - Math.PI / 6;
+        const px = Math.cos(angle) * radius;
+        const py = Math.sin(angle) * radius;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = "#080514";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = "#06040f";
+      ctx.font = `900 ${Math.round(radius * 0.72)}px ui-monospace, monospace`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("TM", 0, 2);
+      ctx.restore();
+    }
+
+    function drawStartScreen() {
+      const boxX = 32;
+      const boxY = 18;
+      const boxW = W - 64;
+      const boxH = H - 36;
+
+      ctx.save();
+      ctx.fillStyle = "rgba(8, 5, 20, 0.92)";
+      ctx.strokeStyle = "rgba(207, 48, 255, 0.55)";
+      ctx.lineWidth = 1.5;
+      drawRoundedBox(boxX, boxY, boxW, boxH, 12);
+      ctx.fill();
+      ctx.stroke();
+
+      drawHexLogo(W / 2, boxY + 46, 28);
+
+      ctx.textAlign = "center";
+      ctx.fillStyle = MINT;
+      ctx.font = "bold 18px monospace";
+      ctx.fillText("JUJUY CONTRA SKYNET", W / 2, boxY + 92);
+
+      ctx.fillStyle = PURPLE;
+      ctx.font = "bold 11px monospace";
+      ctx.fillText("20 FOTOS DE JUJUY · DISPARÁ TALCO Y GANÁ 50% OFF", W / 2, boxY + 112);
+
+      const infoX = boxX + 24;
+      const infoY = boxY + 128;
+      const infoW = boxW - 48;
+      const infoH = 212;
+
+      ctx.fillStyle = "rgba(19, 12, 43, 0.94)";
+      ctx.strokeStyle = "rgba(18, 246, 147, 0.3)";
+      ctx.lineWidth = 1;
+      drawRoundedBox(infoX, infoY, infoW, infoH, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.textAlign = "left";
+      ctx.fillStyle = MINT;
+      ctx.font = "bold 12px monospace";
+      ctx.fillText("¿CÓMO FUNCIONA?", infoX + 16, infoY + 22);
+
+      ctx.fillStyle = "#f6f2ff";
+      ctx.font = "11px monospace";
+      ctx.fillText("• Avanzá con [←] [→] y saltá con [↑] con gorrito, poncho y ojotas.", infoX + 16, infoY + 46);
+      ctx.fillText("• Dispará ráfagas de talco con [ESPACIO] o clic contra los robots.", infoX + 16, infoY + 68);
+      ctx.fillText("• Cada nivel usa su imagen real desde img/img1.jpg hasta img/img20.jpg.", infoX + 16, infoY + 90);
+
+      ctx.fillStyle = DANGER;
+      ctx.font = "bold 11px monospace";
+      ctx.fillText("• ¡CUIDADO! Esquivá los disparos rojos de los robots Skynet.", infoX + 16, infoY + 116);
+
+      ctx.fillStyle = PURPLE;
+      ctx.font = "bold 11px monospace";
+      ctx.fillText("DESAFÍO:", infoX + 16, infoY + 144);
+
+      ctx.fillStyle = "#f6f2ff";
+      ctx.font = "11px monospace";
+      ctx.fillText("• 20 paisajes jujeños con mayor resistencia y cadencia enemiga.", infoX + 16, infoY + 166);
+      ctx.fillText("• Tenés 3 vidas y tu puntaje compite en el Top 10 Highscores.", infoX + 16, infoY + 188);
+
+      const pulse = 0.75 + 0.25 * Math.sin(Date.now() * 0.007);
+      ctx.textAlign = "center";
+      ctx.globalAlpha = pulse;
+      ctx.fillStyle = MINT;
+      ctx.font = "bold 13px monospace";
+      ctx.fillText("PRESIONÁ [↑] O HACÉ CLIC AQUÍ PARA INICIAR", W / 2, boxY + boxH - 18);
+      ctx.restore();
+    }
+
+    function drawOverlay() {
+      if (state === "PLAYING") return;
+
+      if (state === "START") {
+        drawStartScreen();
+        return;
+      }
+
+      ctx.save();
+      ctx.fillStyle = "rgba(5, 3, 13, 0.84)";
+      ctx.fillRect(0, 0, W, H);
+      ctx.textAlign = "center";
+
+      if (state === "LEVEL_UP") {
+        ctx.fillStyle = MINT;
+        ctx.font = "bold 20px monospace";
+        ctx.fillText(`SECTOR ${level} LIBERADO`, W / 2, H / 2 - 22);
+
+        ctx.fillStyle = "#f6f2ff";
+        ctx.font = "11px monospace";
+        ctx.fillText(JUJUY_LEVELS[level - 1].name, W / 2, H / 2);
+
+        ctx.fillStyle = PURPLE;
+        ctx.font = "13px monospace";
+        ctx.fillText(`Presioná [↑] o hacé clic para el Nivel ${level + 1}`, W / 2, H / 2 + 26);
+      } else if (state === "GAME_OVER") {
+        ctx.fillStyle = DANGER;
+        ctx.font = "bold 22px monospace";
+        ctx.fillText(`CAÍSTE EN NIVEL ${level}`, W / 2, H / 2 - 22);
+
+        ctx.fillStyle = MINT;
+        ctx.font = "13px monospace";
+        ctx.fillText(`${playerName}: ${formatPts(score)} PTS`, W / 2, H / 2 + 6);
+
+        ctx.fillStyle = PURPLE;
+        ctx.font = "12px monospace";
+        ctx.fillText("Presioná [↑] o hacé clic para reintentar", W / 2, H / 2 + 34);
+      } else if (state === "WIN") {
+        drawHexLogo(W / 2, H / 2 - 64, 28);
+
+        ctx.fillStyle = MINT;
+        ctx.font = "bold 20px monospace";
+        ctx.fillText("¡20 / 20 PAISAJES DE JUJUY SALVADOS!", W / 2, H / 2 - 12);
+
+        ctx.fillStyle = PURPLE;
+        ctx.font = "13px monospace";
+        ctx.fillText(`Puntaje: ${formatPts(score)} — Cupón 50% OFF abajo`, W / 2, H / 2 + 18);
+      }
+
+      ctx.restore();
+    }
+
+    function loop() {
+      update();
+      drawStageBackground(level);
+      for (const enemy of enemies) {
+        if (enemy.alive) drawSkynetTerminatorRobot(enemy);
+      }
+      drawShotsAndParticles();
+      drawJujenoCharacter();
+      drawOverlay();
+      requestAnimationFrame(loop);
+    }
+
+    openTop10Btn.addEventListener("click", () => {
+      renderLeaderboard();
+      leaderboardOverlay.classList.add("open");
+    });
+
+    closeTop10Btn.addEventListener("click", () => {
+      leaderboardOverlay.classList.remove("open");
+    });
+
+    leaderboardOverlay.addEventListener("click", (e) => {
+      if (e.target === leaderboardOverlay) {
+        leaderboardOverlay.classList.remove("open");
+      }
+    });
+
+    playerNameInput.addEventListener("input", () => {
+      playerName = (playerNameInput.value || "PILOTO").trim().toUpperCase() || "PILOTO";
+      localStorage.setItem(STORAGE_KEY_NAME, playerName);
+    });
+
+    playerNameInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        playerNameInput.blur();
+      }
+      e.stopPropagation();
+    });
+
+    canvas.addEventListener("click", () => {
+      if (leaderboardOverlay.classList.contains("open")) return;
+      if (state === "START" || state === "GAME_OVER" || state === "WIN") {
+        startNewGame();
+      } else if (state === "LEVEL_UP") {
+        initLevel(level + 1);
+      } else if (state === "PLAYING") {
+        shootTalco();
+      }
+    });
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && leaderboardOverlay.classList.contains("open")) {
+        leaderboardOverlay.classList.remove("open");
+        return;
+      }
+
+      if (leaderboardOverlay.classList.contains("open")) return;
+
+      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Space"].includes(e.code)) {
+        e.preventDefault();
+      }
+
+      if (e.code === "ArrowUp") {
+        keys.up = true;
+        if (state === "START" || state === "GAME_OVER" || state === "WIN") {
+          startNewGame();
+        } else if (state === "LEVEL_UP") {
+          initLevel(level + 1);
+        }
+      } else if (e.code === "ArrowLeft") {
+        keys.left = true;
+      } else if (e.code === "ArrowRight") {
+        keys.right = true;
+      } else if (e.code === "Space") {
+        keys.fire = true;
+      }
+    });
+
+    window.addEventListener("keyup", (e) => {
+      if (e.code === "ArrowUp") keys.up = false;
+      else if (e.code === "ArrowLeft") keys.left = false;
+      else if (e.code === "ArrowRight") keys.right = false;
+      else if (e.code === "Space") keys.fire = false;
+    });
+
+    copyCodeBtn.addEventListener("click", () => {
+      navigator.clipboard?.writeText(PROMO_CODE);
+      copyCodeBtn.textContent = "¡COPIADO!";
+      setTimeout(() => {
+        copyCodeBtn.textContent = "COPIAR";
+      }, 1800);
+    });
+
+    renderLeaderboard();
+    updateHUD();
+    loop();
+  </script>
+</body>
+</html>

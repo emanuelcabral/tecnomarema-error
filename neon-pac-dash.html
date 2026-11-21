@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Neon Pac-Dash // Tecnomarema</title>
+  <style>
+    :root {
+      --bg-cosmos: #05030d;
+      --bg-panel: #0b071a;
+      --bg-card: #130c2b;
+      --marema-mint: #12f693;
+      --marema-purple: #cf30ff;
+      --marema-mint-soft: rgba(18, 246, 147, 0.14);
+      --marema-purple-soft: rgba(207, 48, 255, 0.16);
+      --text-main: #f6f2ff;
+      --text-muted: #a699cc;
+      --danger: #ff3366;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      max-height: 100vh;
+      overflow: hidden;
+    }
+
+    body {
+      background:
+        radial-gradient(circle at 20% 15%, rgba(207, 48, 255, 0.18), transparent 45%),
+        radial-gradient(circle at 85% 80%, rgba(18, 246, 147, 0.14), transparent 45%),
+        var(--bg-cosmos);
+      color: var(--text-main);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      height: 100dvh;
+      max-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+    }
+
+    .game-shell {
+      position: relative;
+      width: 100%;
+      max-width: 680px;
+      height: 100%;
+      max-height: calc(100vh - 20px);
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-panel);
+      border: 1px solid rgba(207, 48, 255, 0.38);
+      border-radius: 12px;
+      box-shadow:
+        0 18px 45px rgba(0, 0, 0, 0.72),
+        0 0 26px rgba(207, 48, 255, 0.16),
+        0 0 18px rgba(18, 246, 147, 0.08);
+      overflow: hidden;
+    }
+
+    .top-hud {
+      flex-shrink: 0;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--bg-card);
+      border-bottom: 1px solid rgba(207, 48, 255, 0.24);
+      font-size: 11px;
+    }
+
+    .brand-link {
+      color: var(--marema-mint);
+      text-decoration: none;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+    }
+
+    .brand-link:hover {
+      color: var(--marema-purple);
+    }
+
+    .brand-link span {
+      color: var(--marema-purple);
+    }
+
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .stats strong {
+      color: var(--marema-mint);
+    }
+
+    .player-bar {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 12px;
+      background: #080514;
+      border-bottom: 1px solid rgba(18, 246, 147, 0.14);
+      font-size: 11px;
+    }
+
+    .player-input-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .player-input-group label {
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .player-input {
+      background: var(--bg-card);
+      border: 1px solid rgba(207, 48, 255, 0.42);
+      border-radius: 5px;
+      color: var(--marema-mint);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 7px;
+      width: 100%;
+      max-width: 135px;
+      outline: none;
+    }
+
+    .player-input:focus {
+      border-color: var(--marema-mint);
+    }
+
+    .hi-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .hi-badge {
+      color: var(--marema-purple);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .hi-badge strong {
+      color: var(--marema-mint);
+    }
+
+    .top10-btn {
+      background: var(--marema-purple-soft);
+      border: 1px solid rgba(207, 48, 255, 0.55);
+      color: var(--marema-mint);
+      border-radius: 5px;
+      padding: 3px 8px;
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .top10-btn:hover {
+      background: rgba(18, 246, 147, 0.18);
+      border-color: var(--marema-mint);
+    }
+
+    .level-bar-wrap {
+      flex-shrink: 0;
+      height: 4px;
+      background: #05030d;
+      width: 100%;
+    }
+
+    .level-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--marema-purple), var(--marema-mint));
+      transition: width 0.2s ease;
+    }
+
+    .canvas-stage {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      background: var(--bg-cosmos);
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: pointer;
+    }
+
+    /* Modal Top 10 Highscores */
+    .leaderboard-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(5, 3, 13, 0.88);
+      backdrop-filter: blur(3px);
+      z-index: 20;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .leaderboard-overlay.open {
+      display: flex;
+    }
+
+    .leaderboard-card {
+      width: 100%;
+      max-width: 400px;
+      background: #0e0921;
+      border: 1px solid rgba(207, 48, 255, 0.55);
+      border-radius: 10px;
+      box-shadow: 0 0 28px rgba(207, 48, 255, 0.25);
+      padding: 14px 16px;
+    }
+
+    .leaderboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(18, 246, 147, 0.22);
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+    }
+
+    .leaderboard-header h3 {
+      color: var(--marema-mint);
+      font-size: 13px;
+      letter-spacing: 0.6px;
+    }
+
+    .close-lb-btn {
+      background: transparent;
+      border: 1px solid rgba(207, 48, 255, 0.5);
+      color: var(--marema-purple);
+      border-radius: 4px;
+      padding: 2px 7px;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .close-lb-btn:hover {
+      border-color: var(--marema-mint);
+      color: var(--marema-mint);
+    }
+
+    .lb-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+
+    .lb-table th {
+      text-align: left;
+      color: var(--marema-purple);
+      padding: 4px 6px;
+      border-bottom: 1px solid rgba(207, 48, 255, 0.2);
+      font-weight: 700;
+    }
+
+    .lb-table td {
+      padding: 5px 6px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+    }
+
+    .lb-table tr:first-child td {
+      color: var(--marema-mint);
+      font-weight: 700;
+    }
+
+    .lb-table td.pts-col,
+    .lb-table th.pts-col {
+      text-align: right;
+    }
+
+    .lb-empty {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 18px 8px;
+      font-size: 11px;
+    }
+
+    .reward-panel {
+      display: none;
+      flex-shrink: 0;
+      padding: 9px 14px;
+      background: #100926;
+      border-top: 1px solid rgba(18, 246, 147, 0.4);
+      text-align: center;
+    }
+
+    .reward-panel.visible {
+      display: block;
+    }
+
+    .reward-panel h2 {
+      color: var(--marema-mint);
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .coupon-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--marema-mint-soft);
+      border: 1px dashed var(--marema-mint);
+      padding: 4px 10px;
+      border-radius: 6px;
+      margin-top: 3px;
+    }
+
+    .coupon-code {
+      color: var(--marema-mint);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .copy-btn {
+      background: var(--marema-mint);
+      color: #05030d;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 9px;
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .footer-bar {
+      flex-shrink: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      background: #070412;
+      border-top: 1px solid rgba(207, 48, 255, 0.16);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .keycap {
+      display: inline-block;
+      padding: 1px 5px;
+      border-radius: 4px;
+      border: 1px solid rgba(18, 246, 147, 0.45);
+      background: rgba(18, 246, 147, 0.12);
+      color: var(--marema-mint);
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <div class="game-shell">
+    <div class="top-hud">
+      <a class="brand-link" href="https://tecnomarema.com.ar/" target="_blank" rel="noopener noreferrer">
+        TECNOMAREMA<span>.COM.AR</span>
+      </a>
+      <div class="stats">
+        <div>LVL: <strong id="lvlHud">1/20</strong></div>
+        <div>CHIPS: <strong id="chipsHud">0/0</strong></div>
+        <div>PTS: <strong id="scoreHud">00000</strong></div>
+        <div>VIDAS: <strong id="livesHud">3</strong></div>
+      </div>
+    </div>
+
+    <div class="player-bar">
+      <div class="player-input-group">
+        <label for="playerNameInput">JUGADOR:</label>
+        <input
+          id="playerNameInput"
+          class="player-input"
+          type="text"
+          maxlength="14"
+          placeholder="Tu nombre"
+          autocomplete="off"
+        />
+      </div>
+      <div class="hi-controls">
+        <div class="hi-badge" id="hiHud">HI: <strong>00000</strong> (---)</div>
+        <button id="openTop10Btn" class="top10-btn" type="button">★ TOP 10</button>
+      </div>
+    </div>
+
+    <div class="level-bar-wrap">
+      <div class="level-bar-fill" id="levelBar"></div>
+    </div>
+
+    <div class="canvas-stage">
+      <canvas id="gameCanvas" width="680" height="480"></canvas>
+
+      <!-- Modal Ranking Top 10 -->
+      <div class="leaderboard-overlay" id="leaderboardOverlay">
+        <div class="leaderboard-card">
+          <div class="leaderboard-header">
+            <h3>★ TOP 10 HIGHSCORES // MAREMA</h3>
+            <button id="closeTop10Btn" class="close-lb-btn" type="button">CERRAR [ESC]</button>
+          </div>
+          <div id="leaderboardBody"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="reward-panel" id="rewardPanel">
+      <h2>¡20/20 NODOS SUPERADOS! TU 50% OFF ESTÁ LISTO</h2>
+      <div class="coupon-row">
+        <span class="coupon-code" id="promoCodeText">MAREMA50-PACDASH</span>
+        <button class="copy-btn" id="copyCodeBtn" type="button">COPIAR</button>
+      </div>
+    </div>
+
+    <div class="footer-bar">
+      <div>
+        <span class="keycap">↑</span> <span class="keycap">↓</span>
+        <span class="keycap">←</span> <span class="keycap">→</span> Moverse y esquivar conos
+      </div>
+      <div id="statusHud">INICIO</div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const lvlHud = document.getElementById("lvlHud");
+    const chipsHud = document.getElementById("chipsHud");
+    const scoreHud = document.getElementById("scoreHud");
+    const livesHud = document.getElementById("livesHud");
+    const levelBar = document.getElementById("levelBar");
+    const statusHud = document.getElementById("statusHud");
+    const rewardPanel = document.getElementById("rewardPanel");
+    const promoCodeText = document.getElementById("promoCodeText");
+    const copyCodeBtn = document.getElementById("copyCodeBtn");
+    const playerNameInput = document.getElementById("playerNameInput");
+    const hiHud = document.getElementById("hiHud");
+
+    const openTop10Btn = document.getElementById("openTop10Btn");
+    const closeTop10Btn = document.getElementById("closeTop10Btn");
+    const leaderboardOverlay = document.getElementById("leaderboardOverlay");
+    const leaderboardBody = document.getElementById("leaderboardBody");
+
+    const PROMO_CODE = "MAREMA50-PACDASH";
+    const CUSTOM_LOGO_URL = ""; // Opcional: ruta o URL de tu logo-marema.png
+    const STORAGE_KEY_TOP10 = "tecnomarema_pacdash_top10_v1";
+    const STORAGE_KEY_NAME = "tecnomarema_pacdash_player_v1";
+
+    const MAX_LEVEL = 20;
+    const W = canvas.width;
+    const H = canvas.height;
+
+    const MINT = "#12f693";
+    const PURPLE = "#cf30ff";
+    const DANGER = "#ff3366";
+
+    promoCodeText.textContent = PROMO_CODE;
+
+    let customLogoImg = null;
+    let customLogoLoaded = false;
+    if (CUSTOM_LOGO_URL) {
+      customLogoImg = new Image();
+      customLogoImg.onload = () => {
+        customLogoLoaded = true;
+      };
+      customLogoImg.src = CUSTOM_LOGO_URL;
+    }
+
+    let playerName = (localStorage.getItem(STORAGE_KEY_NAME) || "PILOTO").trim().toUpperCase() || "PILOTO";
+    playerNameInput.value = playerName;
+
+    function loadTop10() {
+      try {
+        const list = JSON.parse(localStorage.getItem(STORAGE_KEY_TOP10));
+        if (Array.isArray(list)) {
+          return list
+            .filter((item) => item && typeof item.score === "number")
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 10);
+        }
+      } catch (_) {}
+      return [];
+    }
+
+    let top10List = loadTop10();
+
+    function saveRunToTop10(name, finalScore, reachedLevel) {
+      const cleanScore = Math.floor(finalScore);
+      if (cleanScore <= 0) return;
+
+      top10List.push({
+        name: name || "PILOTO",
+        score: cleanScore,
+        level: reachedLevel
+      });
+
+      top10List.sort((a, b) => b.score - a.score);
+      top10List = top10List.slice(0, 10);
+      localStorage.setItem(STORAGE_KEY_TOP10, JSON.stringify(top10List));
+      renderLeaderboard();
+    }
+
+    function renderLeaderboard() {
+      if (top10List.length === 0) {
+        leaderboardBody.innerHTML = `<div class="lb-empty">Todavía no hay puntajes registrados.<br>¡Jugá una partida para entrar al Top 10!</div>`;
+        return;
+      }
+
+      const rowsHtml = top10List
+        .map(
+          (entry, idx) => `
+          <tr>
+            <td>#${idx + 1}</td>
+            <td>${entry.name}</td>
+            <td>LVL ${entry.level}</td>
+            <td class="pts-col">${formatPts(entry.score)}</td>
+          </tr>
+        `
+        )
+        .join("");
+
+      leaderboardBody.innerHTML = `
+        <table class="lb-table">
+          <thead>
+            <tr>
+              <th>POS</th>
+              <th>JUGADOR</th>
+              <th>NIVEL</th>
+              <th class="pts-col">PUNTOS</th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      `;
+    }
+
+    const keys = { up: false, down: false, left: false, right: false };
+
+    // Estados: "START" | "PLAYING" | "LEVEL_UP" | "GAME_OVER" | "WIN"
+    let state = "START";
+    let level = 1;
+    let lives = 3;
+    let score = 0;
+    let invulnFrames = 0;
+    let particles = [];
+    let trail = [];
+
+    const COLS = 17;
+    const ROWS = 12;
+    const TILE = 40;
+
+    const MAZE_TEMPLATES = [
+      [
+        "11111111111111111",
+        "10000000100000001",
+        "10110110101101101",
+        "10000000000000001",
+        "10110101110101101",
+        "10000100000100001",
+        "11110111011101111",
+        "10000000000000001",
+        "10110111011101101",
+        "10010000000001001",
+        "10000110101100001",
+        "11111111111111111"
+      ],
+      [
+        "11111111111111111",
+        "10000100000100001",
+        "10110101110101101",
+        "10100000000000101",
+        "10001101010110001",
+        "11100001010000111",
+        "10001100000110001",
+        "10100001110000101",
+        "10110100000101101",
+        "10000111011100001",
+        "10110000000001101",
+        "11111111111111111"
+      ],
+      [
+        "11111111111111111",
+        "10000000000000001",
+        "10111011011011101",
+        "10100000000000101",
+        "10101110101110101",
+        "10000000100000001",
+        "10110110001101101",
+        "10000100100100001",
+        "11110101110101111",
+        "10000000000000001",
+        "10111101110111101",
+        "11111111111111111"
+      ]
+    ];
+
+    let grid = MAZE_TEMPLATES[0].map((rowStr) => rowStr.split("").map((ch) => Number(ch)));
+    let chips = [];
+    let totalChipsInLevel = 0;
+    let collectedChipsInLevel = 0;
+    let drones = [];
+
+    const player = {
+      x: TILE * 1.5,
+      y: TILE * 1.5,
+      radius: 11,
+      speed: 3.1,
+      dirX: 0,
+      dirY: 0
+    };
+
+    const stars = Array.from({ length: 80 }, (_, idx) => {
+      const tintRoll = idx % 7;
+      let color = "#f6f2ff";
+      if (tintRoll === 0 || tintRoll === 1) color = MINT;
+      else if (tintRoll === 2 || tintRoll === 3) color = PURPLE;
+
+      return {
+        x: Math.random() * W,
+        y: Math.random() * H,
+        size: 1 + (idx % 3) * 0.65,
+        twinkle: Math.random() * Math.PI * 2,
+        speed: 0.03 + (idx % 3) * 0.015,
+        color
+      };
+    });
+
+    function drawRoundedBox(x, y, w, h, r) {
+      const radius = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + radius, y);
+      ctx.arcTo(x + w, y, x + w, y + h, radius);
+      ctx.arcTo(x + w, y + h, x, y + h, radius);
+      ctx.arcTo(x, y + h, x, y, radius);
+      ctx.arcTo(x, y, x + w, y, radius);
+      ctx.closePath();
+    }
+
+    function formatPts(val) {
+      return String(Math.floor(val)).padStart(5, "0");
+    }
+
+    function syncHighScore() {
+      const bestSaved = top10List.length > 0 ? top10List[0] : { score: 0, name: "---" };
+      if (score > bestSaved.score) {
+        hiHud.innerHTML = `HI: <strong>${formatPts(score)}</strong> (${playerName})`;
+      } else {
+        hiHud.innerHTML = `HI: <strong>${formatPts(bestSaved.score)}</strong> (${bestSaved.name})`;
+      }
+    }
+
+    function getLevelConfig(lvl) {
+      return {
+        chipTarget: Math.min(48, 14 + (lvl - 1) * 2),
+        droneCount: lvl < 3 ? 2 : lvl < 8 ? 3 : lvl < 15 ? 4 : 5,
+        droneSpeed: 1.55 + (lvl - 1) * 0.09,
+        coneRange: Math.min(155, 92 + (lvl - 1) * 3.2),
+        coneSpread: Math.min(0.62, 0.36 + (lvl - 1) * 0.012)
+      };
+    }
+
+    function isWallCell(col, row) {
+      if (!grid || !grid[row]) return true;
+      if (row < 0 || row >= ROWS || col < 0 || col >= COLS) return true;
+      return grid[row][col] === 1;
+    }
+
+    function canMoveTo(nx, ny, r) {
+      const margin = r - 2;
+      const left = Math.floor((nx - margin) / TILE);
+      const right = Math.floor((nx + margin) / TILE);
+      const top = Math.floor((ny - margin) / TILE);
+      const bottom = Math.floor((ny + margin) / TILE);
+
+      return (
+        !isWallCell(left, top) &&
+        !isWallCell(right, top) &&
+        !isWallCell(left, bottom) &&
+        !isWallCell(right, bottom)
+      );
+    }
+
+    function spawnBurst(x, y, color, count = 10) {
+      for (let i = 0; i < count; i++) {
+        const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.4;
+        const spd = 1.2 + Math.random() * 3.2;
+        particles.push({
+          x,
+          y,
+          vx: Math.cos(angle) * spd,
+          vy: Math.sin(angle) * spd,
+          size: 2.5 + Math.random() * 2.5,
+          life: 18 + Math.random() * 10,
+          color
+        });
+      }
+    }
+
+    function initLevel(targetLvl) {
+      level = targetLvl;
+      const cfg = getLevelConfig(level);
+      const template = MAZE_TEMPLATES[(level - 1) % MAZE_TEMPLATES.length];
+
+      grid = template.map((rowStr) => rowStr.split("").map((ch) => Number(ch)));
+      particles = [];
+      trail = [];
+      invulnFrames = 45;
+
+      player.x = TILE * 1.5;
+      player.y = TILE * 1.5;
+      player.dirX = 0;
+      player.dirY = 0;
+
+      const openCells = [];
+      for (let r = 1; r < ROWS - 1; r++) {
+        for (let c = 1; c < COLS - 1; c++) {
+          if (grid[r][c] === 0 && !(r === 1 && c === 1)) {
+            openCells.push({ col: c, row: r });
+          }
+        }
+      }
+
+      for (let i = openCells.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [openCells[i], openCells[j]] = [openCells[j], openCells[i]];
+      }
+
+      const selectedChipCells = openCells.slice(0, Math.min(cfg.chipTarget, openCells.length));
+      chips = selectedChipCells.map((cell) => ({
+        x: cell.col * TILE + TILE / 2,
+        y: cell.row * TILE + TILE / 2,
+        collected: false,
+        pulse: Math.random() * Math.PI * 2
+      }));
+
+      totalChipsInLevel = chips.length;
+      collectedChipsInLevel = 0;
+
+      const droneSpawnCandidates = openCells.filter(
+        (c) => Math.hypot(c.col - 1, c.row - 1) >= 6
+      );
+
+      const DIRS = [
+        { x: 1, y: 0 },
+        { x: -1, y: 0 },
+        { x: 0, y: 1 },
+        { x: 0, y: -1 }
+      ];
+
+      drones = [];
+      for (let i = 0; i < cfg.droneCount; i++) {
+        const cell = droneSpawnCandidates[i % droneSpawnCandidates.length] || { col: COLS - 2, row: ROWS - 2 };
+        const initDir = DIRS[i % DIRS.length];
+        drones.push({
+          x: cell.col * TILE + TILE / 2,
+          y: cell.row * TILE + TILE / 2,
+          dirX: initDir.x,
+          dirY: initDir.y,
+          angle: Math.atan2(initDir.y, initDir.x),
+          speed: cfg.droneSpeed,
+          coneRange: cfg.coneRange,
+          coneSpread: cfg.coneSpread,
+          alertTimer: 0,
+          turnCooldown: 0
+        });
+      }
+
+      state = "PLAYING";
+      statusHud.textContent = `NODO ${level}`;
+      updateHUD();
+    }
+
+    function startNewGame() {
+      playerName = (playerNameInput.value || "PILOTO").trim().toUpperCase() || "PILOTO";
+      playerNameInput.value = playerName;
+      localStorage.setItem(STORAGE_KEY_NAME, playerName);
+
+      lives = 3;
+      score = 0;
+      rewardPanel.classList.remove("visible");
+      syncHighScore();
+      initLevel(1);
+    }
+
+    function updateHUD() {
+      lvlHud.textContent = `${level}/${MAX_LEVEL}`;
+      chipsHud.textContent = `${collectedChipsInLevel}/${totalChipsInLevel}`;
+      scoreHud.textContent = formatPts(score);
+      livesHud.textContent = lives;
+
+      const levelPct = totalChipsInLevel > 0 ? collectedChipsInLevel / totalChipsInLevel : 0;
+      const totalPct = (((level - 1) + (state === "WIN" ? 1 : levelPct)) / MAX_LEVEL) * 100;
+      levelBar.style.width = `${Math.min(100, totalPct)}%`;
+      syncHighScore();
+    }
+
+    function hasLineOfSight(x1, y1, x2, y2) {
+      const dist = Math.hypot(x2 - x1, y2 - y1);
+      const steps = Math.ceil(dist / 12);
+      for (let i = 1; i < steps; i++) {
+        const t = i / steps;
+        const sx = x1 + (x2 - x1) * t;
+        const sy = y1 + (y2 - y1) * t;
+        const c = Math.floor(sx / TILE);
+        const r = Math.floor(sy / TILE);
+        if (isWallCell(c, r)) return false;
+      }
+      return true;
+    }
+
+    function updateDrone(drone) {
+      const DIRS = [
+        { x: 1, y: 0 },
+        { x: -1, y: 0 },
+        { x: 0, y: 1 },
+        { x: 0, y: -1 }
+      ];
+
+      const dxToPlayer = player.x - drone.x;
+      const dyToPlayer = player.y - drone.y;
+      const distToPlayer = Math.hypot(dxToPlayer, dyToPlayer);
+
+      if (distToPlayer <= drone.coneRange) {
+        const angleToPlayer = Math.atan2(dyToPlayer, dxToPlayer);
+        let diff = angleToPlayer - drone.angle;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+
+        if (Math.abs(diff) <= drone.coneSpread && hasLineOfSight(drone.x, drone.y, player.x, player.y)) {
+          drone.alertTimer = 90;
+        }
+      }
+
+      if (drone.alertTimer > 0) drone.alertTimer--;
+      if (drone.turnCooldown > 0) drone.turnCooldown--;
+
+      const currentSpeed = drone.alertTimer > 0 ? drone.speed * 1.32 : drone.speed;
+      const cellCenterX = (Math.floor(drone.x / TILE) + 0.5) * TILE;
+      const cellCenterY = (Math.floor(drone.y / TILE) + 0.5) * TILE;
+      const nearCenter = Math.hypot(drone.x - cellCenterX, drone.y - cellCenterY) < 3.2;
+
+      const blockedAhead = !canMoveTo(
+        drone.x + drone.dirX * (currentSpeed + 4),
+        drone.y + drone.dirY * (currentSpeed + 4),
+        11
+      );
+
+      if (blockedAhead || (nearCenter && drone.turnCooldown === 0 && Math.random() < 0.35)) {
+        const validDirs = DIRS.filter((d) => {
+          const isReverse = d.x === -drone.dirX && d.y === -drone.dirY;
+          if (isReverse && !blockedAhead) return false;
+          return canMoveTo(cellCenterX + d.x * 10, cellCenterY + d.y * 10, 11);
+        });
+
+        if (validDirs.length > 0) {
+          let chosen = validDirs[Math.floor(Math.random() * validDirs.length)];
+
+          if (drone.alertTimer > 0) {
+            validDirs.sort((a, b) => {
+              const distA = Math.hypot(player.x - (drone.x + a.x * TILE), player.y - (drone.y + a.y * TILE));
+              const distB = Math.hypot(player.x - (drone.x + b.x * TILE), player.y - (drone.y + b.y * TILE));
+              return distA - distB;
+            });
+            chosen = validDirs[0];
+          }
+
+          drone.x = cellCenterX;
+          drone.y = cellCenterY;
+          drone.dirX = chosen.x;
+          drone.dirY = chosen.y;
+          drone.turnCooldown = 14;
+        } else {
+          drone.dirX *= -1;
+          drone.dirY *= -1;
+        }
+      }
+
+      const nextX = drone.x + drone.dirX * currentSpeed;
+      const nextY = drone.y + drone.dirY * currentSpeed;
+      if (canMoveTo(nextX, nextY, 11)) {
+        drone.x = nextX;
+        drone.y = nextY;
+      }
+
+      const targetAngle = Math.atan2(drone.dirY, drone.dirX);
+      let angleDelta = targetAngle - drone.angle;
+      while (angleDelta > Math.PI) angleDelta -= Math.PI * 2;
+      while (angleDelta < -Math.PI) angleDelta += Math.PI * 2;
+      drone.angle += angleDelta * 0.22;
+    }
+
+    function update() {
+      for (const st of stars) {
+        st.twinkle += st.speed;
+      }
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life--;
+        if (p.life <= 0) particles.splice(i, 1);
+      }
+
+      // Pausar simulación si el modal Top 10 está abierto
+      if (state !== "PLAYING" || leaderboardOverlay.classList.contains("open")) return;
+
+      if (invulnFrames > 0) invulnFrames--;
+
+      let vx = 0;
+      let vy = 0;
+      if (keys.left) vx -= 1;
+      if (keys.right) vx += 1;
+      if (keys.up) vy -= 1;
+      if (keys.down) vy += 1;
+
+      if (vx !== 0 && vy !== 0) {
+        const inv = 1 / Math.SQRT2;
+        vx *= inv;
+        vy *= inv;
+      }
+
+      if (vx !== 0 || vy !== 0) {
+        player.dirX = vx;
+        player.dirY = vy;
+
+        const stepX = vx * player.speed;
+        const stepY = vy * player.speed;
+
+        if (canMoveTo(player.x + stepX, player.y, player.radius)) {
+          player.x += stepX;
+        } else if (vx !== 0) {
+          const centerY = (Math.floor(player.y / TILE) + 0.5) * TILE;
+          if (Math.abs(player.y - centerY) < 12) {
+            player.y += Math.sign(centerY - player.y) * 1.8;
+          }
+        }
+
+        if (canMoveTo(player.x, player.y + stepY, player.radius)) {
+          player.y += stepY;
+        } else if (vy !== 0) {
+          const centerX = (Math.floor(player.x / TILE) + 0.5) * TILE;
+          if (Math.abs(player.x - centerX) < 12) {
+            player.x += Math.sign(centerX - player.x) * 1.8;
+          }
+        }
+
+        trail.push({ x: player.x, y: player.y, alpha: 0.35 });
+        if (trail.length > 7) trail.shift();
+      }
+
+      for (const t of trail) t.alpha *= 0.82;
+
+      for (const chip of chips) {
+        if (chip.collected) continue;
+        chip.pulse += 0.08;
+
+        if (Math.hypot(player.x - chip.x, player.y - chip.y) < player.radius + 9) {
+          chip.collected = true;
+          collectedChipsInLevel++;
+          score += 25 * level;
+          spawnBurst(chip.x, chip.y, MINT, 9);
+        }
+      }
+
+      if (collectedChipsInLevel >= totalChipsInLevel) {
+        score += 200 * level;
+        updateHUD();
+
+        if (level >= MAX_LEVEL) {
+          state = "WIN";
+          statusHud.textContent = "20/20 COMPLETADO";
+          saveRunToTop10(playerName, score, MAX_LEVEL);
+          updateHUD();
+          rewardPanel.classList.add("visible");
+        } else {
+          state = "LEVEL_UP";
+          statusHud.textContent = `NODO ${level} SUPERADO`;
+        }
+        return;
+      }
+
+      for (const drone of drones) {
+        updateDrone(drone);
+
+        if (invulnFrames === 0 && Math.hypot(player.x - drone.x, player.y - drone.y) < player.radius + 10) {
+          lives--;
+          invulnFrames = 75;
+          spawnBurst(player.x, player.y, DANGER, 18);
+
+          if (lives <= 0) {
+            lives = 0;
+            state = "GAME_OVER";
+            statusHud.textContent = "ATRAPADO // GAME OVER";
+            saveRunToTop10(playerName, score, level);
+            updateHUD();
+            return;
+          }
+
+          player.x = TILE * 1.5;
+          player.y = TILE * 1.5;
+          updateHUD();
+          break;
+        }
+      }
+
+      updateHUD();
+    }
+
+    function drawCosmosAndGrid() {
+      ctx.fillStyle = "#05030d";
+      ctx.fillRect(0, 0, W, H);
+
+      const g1 = ctx.createRadialGradient(W * 0.2, H * 0.25, 10, W * 0.2, H * 0.25, 220);
+      g1.addColorStop(0, "rgba(207, 48, 255, 0.12)");
+      g1.addColorStop(1, "rgba(5, 3, 13, 0)");
+      ctx.fillStyle = g1;
+      ctx.fillRect(0, 0, W, H);
+
+      const g2 = ctx.createRadialGradient(W * 0.82, H * 0.78, 10, W * 0.82, H * 0.78, 220);
+      g2.addColorStop(0, "rgba(18, 246, 147, 0.09)");
+      g2.addColorStop(1, "rgba(5, 3, 13, 0)");
+      ctx.fillStyle = g2;
+      ctx.fillRect(0, 0, W, H);
+
+      for (const st of stars) {
+        const alpha = 0.35 + 0.65 * Math.sin(st.twinkle);
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = st.color;
+        ctx.beginPath();
+        ctx.arc(st.x, st.y, st.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      if (!grid || grid.length === 0) return;
+
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          if (grid[r] && grid[r][c] === 1) {
+            const x = c * TILE;
+            const y = r * TILE;
+
+            ctx.fillStyle = "rgba(19, 12, 43, 0.92)";
+            ctx.fillRect(x + 1, y + 1, TILE - 2, TILE - 2);
+
+            ctx.strokeStyle = "rgba(207, 48, 255, 0.65)";
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(x + 2, y + 2, TILE - 4, TILE - 4);
+          }
+        }
+      }
+    }
+
+    function drawChips() {
+      for (const chip of chips) {
+        if (chip.collected) continue;
+        const glowSize = 6 + Math.sin(chip.pulse) * 1.4;
+
+        ctx.save();
+        ctx.translate(chip.x, chip.y);
+        ctx.rotate(Math.PI / 4);
+        ctx.fillStyle = MINT;
+        ctx.shadowColor = MINT;
+        ctx.shadowBlur = 10;
+        ctx.fillRect(-glowSize / 2, -glowSize / 2, glowSize, glowSize);
+        ctx.restore();
+      }
+    }
+
+    function drawDrones() {
+      for (const drone of drones) {
+        const isAlert = drone.alertTimer > 0;
+        const coneColor = isAlert ? "rgba(255, 51, 102, 0.26)" : "rgba(207, 48, 255, 0.2)";
+        const coreColor = isAlert ? DANGER : PURPLE;
+
+        ctx.save();
+        const grad = ctx.createRadialGradient(drone.x, drone.y, 4, drone.x, drone.y, drone.coneRange);
+        grad.addColorStop(0, coneColor);
+        grad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.moveTo(drone.x, drone.y);
+        ctx.arc(
+          drone.x,
+          drone.y,
+          drone.coneRange,
+          drone.angle - drone.coneSpread,
+          drone.angle + drone.coneSpread
+        );
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+
+        ctx.save();
+        ctx.translate(drone.x, drone.y);
+        ctx.rotate(drone.angle);
+        ctx.fillStyle = coreColor;
+        ctx.shadowColor = coreColor;
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.moveTo(12, 0);
+        ctx.lineTo(-9, -8);
+        ctx.lineTo(-5, 0);
+        ctx.lineTo(-9, 8);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    function drawPlayer() {
+      if (state === "START") return;
+      if (invulnFrames > 0 && Math.floor(invulnFrames / 4) % 2 === 0) return;
+
+      for (const t of trail) {
+        ctx.fillStyle = `rgba(18, 246, 147, ${t.alpha * 0.35})`;
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, player.radius * 0.75, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.save();
+      ctx.fillStyle = MINT;
+      ctx.shadowColor = MINT;
+      ctx.shadowBlur = 14;
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, player.radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "#080514";
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, player.radius * 0.45, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawParticles() {
+      for (const p of particles) {
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = Math.max(0, p.life / 28);
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    function drawHexLogo(cx, cy, radius) {
+      ctx.save();
+      ctx.translate(cx, cy);
+
+      if (customLogoLoaded && customLogoImg) {
+        const size = radius * 2.1;
+        ctx.drawImage(customLogoImg, -size / 2, -size / 2, size, size);
+        ctx.restore();
+        return;
+      }
+
+      ctx.shadowColor = MINT;
+      ctx.shadowBlur = 16;
+      ctx.fillStyle = MINT;
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i - Math.PI / 6;
+        const px = Math.cos(angle) * radius;
+        const py = Math.sin(angle) * radius;
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = "#080514";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = "#06040f";
+      ctx.font = `900 ${Math.round(radius * 0.72)}px ui-monospace, monospace`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("TM", 0, 2);
+      ctx.restore();
+    }
+
+    function drawStartScreen() {
+      const boxX = 32;
+      const boxY = 18;
+      const boxW = W - 64;
+      const boxH = H - 36;
+
+      ctx.save();
+      ctx.fillStyle = "rgba(8, 5, 20, 0.92)";
+      ctx.strokeStyle = "rgba(207, 48, 255, 0.55)";
+      ctx.lineWidth = 1.5;
+      drawRoundedBox(boxX, boxY, boxW, boxH, 12);
+      ctx.fill();
+      ctx.stroke();
+
+      drawHexLogo(W / 2, boxY + 46, 28);
+
+      ctx.textAlign = "center";
+      ctx.fillStyle = MINT;
+      ctx.font = "bold 18px monospace";
+      ctx.fillText("NEON PAC-DASH // SIGILO CÓSMICO", W / 2, boxY + 92);
+
+      ctx.fillStyle = PURPLE;
+      ctx.font = "bold 11px monospace";
+      ctx.fillText("COMPLETÁ LOS 20 NODOS Y GANÁ 50% OFF", W / 2, boxY + 112);
+
+      const infoX = boxX + 24;
+      const infoY = boxY + 128;
+      const infoW = boxW - 48;
+      const infoH = 212;
+
+      ctx.fillStyle = "rgba(19, 12, 43, 0.94)";
+      ctx.strokeStyle = "rgba(18, 246, 147, 0.3)";
+      ctx.lineWidth = 1;
+      drawRoundedBox(infoX, infoY, infoW, infoH, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.textAlign = "left";
+      ctx.fillStyle = MINT;
+      ctx.font = "bold 12px monospace";
+      ctx.fillText("¿CÓMO FUNCIONA?", infoX + 16, infoY + 22);
+
+      ctx.fillStyle = "#f6f2ff";
+      ctx.font = "11px monospace";
+      ctx.fillText("• Movete por el laberinto usando las 4 flechas [↑] [↓] [←] [→].", infoX + 16, infoY + 46);
+      ctx.fillText("• Recolectá todos los chips verde neón (#12f693) del mapa.", infoX + 16, infoY + 68);
+      ctx.fillText("• Evitá los conos de luz de los drones patrulleros (#cf30ff).", infoX + 16, infoY + 90);
+
+      ctx.fillStyle = DANGER;
+      ctx.font = "bold 11px monospace";
+      ctx.fillText("• ¡CUIDADO! Si un cono te ilumina, el dron entra en alerta y acelera.", infoX + 16, infoY + 116);
+
+      ctx.fillStyle = PURPLE;
+      ctx.font = "bold 11px monospace";
+      ctx.fillText("DESAFÍO:", infoX + 16, infoY + 144);
+
+      ctx.fillStyle = "#f6f2ff";
+      ctx.font = "11px monospace";
+      ctx.fillText("• 20 niveles con más chips, nuevos laberintos y más drones.", infoX + 16, infoY + 166);
+      ctx.fillText("• Tenés 3 vidas y tu puntaje compite en el Top 10 Highscores.", infoX + 16, infoY + 188);
+
+      const pulse = 0.75 + 0.25 * Math.sin(Date.now() * 0.007);
+      ctx.textAlign = "center";
+      ctx.globalAlpha = pulse;
+      ctx.fillStyle = MINT;
+      ctx.font = "bold 13px monospace";
+      ctx.fillText("PRESIONÁ CUALQUIER FLECHA O HACÉ CLIC AQUÍ", W / 2, boxY + boxH - 18);
+      ctx.restore();
+    }
+
+    function drawOverlay() {
+      if (state === "PLAYING") return;
+
+      if (state === "START") {
+        drawStartScreen();
+        return;
+      }
+
+      ctx.save();
+      ctx.fillStyle = "rgba(5, 3, 13, 0.84)";
+      ctx.fillRect(0, 0, W, H);
+      ctx.textAlign = "center";
+
+      if (state === "LEVEL_UP") {
+        ctx.fillStyle = MINT;
+        ctx.font = "bold 22px monospace";
+        ctx.fillText(`NODO ${level} SUPERADO`, W / 2, H / 2 - 18);
+
+        ctx.fillStyle = PURPLE;
+        ctx.font = "13px monospace";
+        ctx.fillText(`Presioná [↑] o hacé clic para el Nivel ${level + 1}`, W / 2, H / 2 + 16);
+      } else if (state === "GAME_OVER") {
+        ctx.fillStyle = DANGER;
+        ctx.font = "bold 22px monospace";
+        ctx.fillText(`ATRAPADO EN EL NIVEL ${level}`, W / 2, H / 2 - 22);
+
+        ctx.fillStyle = MINT;
+        ctx.font = "13px monospace";
+        ctx.fillText(`${playerName}: ${formatPts(score)} PTS`, W / 2, H / 2 + 6);
+
+        ctx.fillStyle = PURPLE;
+        ctx.font = "12px monospace";
+        ctx.fillText("Presioná [↑] o hacé clic para reintentar", W / 2, H / 2 + 34);
+      } else if (state === "WIN") {
+        drawHexLogo(W / 2, H / 2 - 64, 28);
+
+        ctx.fillStyle = MINT;
+        ctx.font = "bold 20px monospace";
+        ctx.fillText("¡20 / 20 NODOS SUPERADOS!", W / 2, H / 2 - 12);
+
+        ctx.fillStyle = PURPLE;
+        ctx.font = "13px monospace";
+        ctx.fillText(`Puntaje: ${formatPts(score)} — Cupón 50% OFF abajo`, W / 2, H / 2 + 18);
+      }
+
+      ctx.restore();
+    }
+
+    function loop() {
+      update();
+      drawCosmosAndGrid();
+      drawChips();
+      drawDrones();
+      drawParticles();
+      drawPlayer();
+      drawOverlay();
+      requestAnimationFrame(loop);
+    }
+
+    openTop10Btn.addEventListener("click", () => {
+      renderLeaderboard();
+      leaderboardOverlay.classList.add("open");
+    });
+
+    closeTop10Btn.addEventListener("click", () => {
+      leaderboardOverlay.classList.remove("open");
+    });
+
+    leaderboardOverlay.addEventListener("click", (e) => {
+      if (e.target === leaderboardOverlay) {
+        leaderboardOverlay.classList.remove("open");
+      }
+    });
+
+    playerNameInput.addEventListener("input", () => {
+      playerName = (playerNameInput.value || "PILOTO").trim().toUpperCase() || "PILOTO";
+      localStorage.setItem(STORAGE_KEY_NAME, playerName);
+    });
+
+    playerNameInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        playerNameInput.blur();
+      }
+      e.stopPropagation();
+    });
+
+    canvas.addEventListener("click", () => {
+      if (leaderboardOverlay.classList.contains("open")) return;
+      if (state === "START" || state === "GAME_OVER" || state === "WIN") {
+        startNewGame();
+      } else if (state === "LEVEL_UP") {
+        initLevel(level + 1);
+      }
+    });
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && leaderboardOverlay.classList.contains("open")) {
+        leaderboardOverlay.classList.remove("open");
+        return;
+      }
+
+      if (leaderboardOverlay.classList.contains("open")) return;
+
+      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.code)) {
+        e.preventDefault();
+
+        if (state === "START") {
+          startNewGame();
+        } else if (state === "LEVEL_UP" && e.code === "ArrowUp") {
+          initLevel(level + 1);
+        } else if ((state === "GAME_OVER" || state === "WIN") && e.code === "ArrowUp") {
+          startNewGame();
+        }
+      }
+
+      if (e.code === "ArrowUp") keys.up = true;
+      else if (e.code === "ArrowDown") keys.down = true;
+      else if (e.code === "ArrowLeft") keys.left = true;
+      else if (e.code === "ArrowRight") keys.right = true;
+    });
+
+    window.addEventListener("keyup", (e) => {
+      if (e.code === "ArrowUp") keys.up = false;
+      else if (e.code === "ArrowDown") keys.down = false;
+      else if (e.code === "ArrowLeft") keys.left = false;
+      else if (e.code === "ArrowRight") keys.right = false;
+    });
+
+    copyCodeBtn.addEventListener("click", () => {
+      navigator.clipboard?.writeText(PROMO_CODE);
+      copyCodeBtn.textContent = "¡COPIADO!";
+      setTimeout(() => {
+        copyCodeBtn.textContent = "COPIAR";
+      }, 1800);
+    });
+
+    renderLeaderboard();
+    updateHUD();
+    loop();
+  </script>
+</body>
+</html>
